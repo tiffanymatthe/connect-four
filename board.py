@@ -175,15 +175,21 @@ class board:
         else:
             return -1
 
+    def get_int_input(self, message):
+        user_input = input(message)
+        while(not user_input.isnumeric()):
+            user_input = input("Not an int, try again: ")
+        return int(user_input)
+
     def get_player_move(self, player_id):
         if (self.check_draw()):
             return False
-        col = int(input("Please enter a column index: "))
+        col = self.get_int_input("Please enter a column index: ")
         while(col < 0 or col >= self.num_col):
-            col = int(input("Not in range, try again: "))
+            col = self.get_int_input("Not in range, try again: ")
         success = board.move(player_id, col)
         while(not success):
-            col = int(input("Col is full, try another one: "))
+            col = self.get_int_input("Col is full, try another one: ")
             success = board.move(player_id, col)
 
         return True
