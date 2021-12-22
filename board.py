@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 import numpy as np
+import random
 
 class board:
     def __init__(self) -> None:
         self.num_col = 7
         self.col_height = 6
         # 1 is red, -1 is yellow, 0 is black
-        self.current_state = np.zeros((self.col_height, self.num_col)).astype(int)
-        self.p0_token = 1
-        self.p1_token = -1
+        self.current_state = -np.ones((self.col_height, self.num_col)).astype(int)
+        self.p0_token = 0
+        self.p1_token = 1
         self.colors = {
-            0: "\033[40m - \033[0m", # black
+            -1: "\033[40m - \033[0m", # black
             self.p0_token: "\033[41m o \033[0m", # red
             self.p1_token: "\033[43m x \033[0m" # yellow
         }
@@ -66,6 +67,13 @@ class board:
             raise ValueError("Column {} is out of bounds.".format(col_num))
         return None
 
+    def check_draw(self):
+        for c in range(0, self.num_col):
+            if not self.is_col_full(c):
+                return False
+        print("It's a draw.")
+        return True
+
     def find_longest_seq(self, arr, val):
         # https://stackoverflow.com/a/38161867
         idx_pairs = np.where(np.diff(np.hstack(([False],arr==val,[False]))))[0].reshape(-1,2)
@@ -101,7 +109,10 @@ class board:
             arr_list.append(diag1.tolist())
             arr_list.append(diag2.tolist())
 
-        return self.check_win_state_in_list(arr_list, token)
+        win = self.check_win_state_in_list(arr_list, token)
+        if win:
+            print("Player {} won!".format(player_num))
+        return win
 
     def move(self, player_num: int, col: int) -> bool:
         """
@@ -125,19 +136,66 @@ class board:
             self.current_state[self.unfilled_states[col], col] = self.p1_token
         self.unfilled_states[col] -= 1
         return True
+
+    def computer_move(self) -> bool:
+        """
+        Computer (player_num = 0) makes a move. If not possible (draw), returns False.
+        """
+        col = random.randint(0, self.num_col - 1)
+        success = self.move(0, col)
+        while (not success):
+            if self.check_draw():
+                return False
+            col = random.randint(0, self.num_col - 1)
+            success = self.move(0, col)
+
+        return True
+
+    def check_for_winner(self) -> int:
+        if self.check_winning_state(0):
+            return 0
+        if self.check_winning_state(1):
+            return 1
+        else:
+            return -1
+
+    def get_player_move(self, player_id):
+        if (self.check_draw()):
+            return False
+        col = int(input("Please enter a column index: "))
+        while(col < 0 or col >= self.num_col):
+            col = int(input("Not in range, try again: "))
+        success = board.move(player_id, col)
+        while(not success):
+            col = int(input("Col is full, try another one: "))
+            success = board.move(player_id, col)
+
+        return True
         
 if __name__ == '__main__':
     board = board()
-    for i in range(3):
-        success = board.move(1, i)
-    success = board.move(1, 1)
-    success = board.move(0, 1)
-    success = board.move(0, 2)
-    success = board.move(1, 2)
-    success = board.move(0, 3)
-    success = board.move(0, 3)
-    success = board.move(0, 3)
-    success = board.move(1, 3)
+    player_id = 1
+    first_player = random.randint(0, 1)
+    if first_player == 0:
+        print("Computer (player 0) gets first move.")
+        board.computer_move()
+        board.see_board()
+        board.get_player_move(player_id)
+        board.see_board()
+        board.computer_move()
+    else:
+        print("Player 1 gets first move.")
+        board.get_player_move(player_id)
+        board.see_board()
+        board.computer_move()
     board.see_board()
-    # print(board.check_winning_state(0))
-    print(board.check_winning_state(1))
+
+    winner = board.check_for_winner()
+    while (winner == -1):
+        if (board.check_draw()):
+            break
+        board.get_player_move(player_id)
+        board.see_board()
+        board.computer_move()
+        board.see_board()
+        winner = board.check_for_winner()
