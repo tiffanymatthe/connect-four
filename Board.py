@@ -2,7 +2,7 @@
 import numpy as np
 import random
 
-class board:
+class Board:
     def __init__(self) -> None:
         self.num_col = 7
         self.col_height = 6
@@ -45,7 +45,7 @@ class board:
 
     def see_board(self):
         """
-        Display board. 'o' represents player 0, 'x' represents player 1, '-' represents an empty space.
+        Display Board. 'o' represents player 0, 'x' represents player 1, '-' represents an empty space.
         """
         display_board = self.current_state
         coloured_board = np.vectorize(self.get_color_coded_background)(display_board)
@@ -75,7 +75,7 @@ class board:
         Raises
         ------
         ValueError
-            If column is out of bounds of board columns.
+            If column is out of bounds of Board columns.
 
         Returns None if ok.
         """
@@ -83,7 +83,7 @@ class board:
             raise ValueError("Column {} is out of bounds.".format(col_num))
         return None
 
-    def check_draw(self):
+    def is_draw(self):
         for c in range(0, self.num_col):
             if not self.is_col_full(c):
                 return False
@@ -99,7 +99,7 @@ class board:
         else:
             return 0
 
-    def check_win_state_in_list(self, arr_list, token):
+    def is_win_state_in_list(self, arr_list, token):
         for arr in arr_list:
             arr = np.array(arr)
             if (arr == token).sum() < 4:
@@ -109,7 +109,7 @@ class board:
                     return True
         return False
 
-    def check_winning_state(self, player_num):
+    def is_winner(self, player_num):
         token = self.p0_token if player_num == 0 else self.p1_token
         if (self.current_state == token).sum() < 4:
             return False
@@ -125,14 +125,14 @@ class board:
             arr_list.append(diag1.tolist())
             arr_list.append(diag2.tolist())
 
-        win = self.check_win_state_in_list(arr_list, token)
+        win = self.is_win_state_in_list(arr_list, token)
         if win:
             print("Player {} won!".format(player_num))
         return win
 
     def move(self, player_num: int, col: int) -> bool:
         """
-        Makes a move for player_num. Modifies current_state of board.
+        Makes a move for player_num. Modifies current_state of Board.
         ...
         Parameters
         ----------
@@ -160,17 +160,20 @@ class board:
         col = random.randint(0, self.num_col - 1)
         success = self.move(0, col)
         while (not success):
-            if self.check_draw():
+            if self.is_draw():
                 return False
             col = random.randint(0, self.num_col - 1)
             success = self.move(0, col)
 
         return True
 
-    def check_for_winner(self) -> int:
-        if self.check_winning_state(0):
+    def get_winner(self) -> int:
+        """
+        Returns -1 if there is no winner.
+        """
+        if self.is_winner(0):
             return 0
-        if self.check_winning_state(1):
+        if self.is_winner(1):
             return 1
         else:
             return -1
@@ -182,42 +185,42 @@ class board:
         return int(user_input)
 
     def get_player_move(self, player_id):
-        if (self.check_draw()):
+        if (self.is_draw()):
             return False
         col = self.get_int_input("Please enter a column index: ")
         while(col < 0 or col >= self.num_col):
             col = self.get_int_input("Not in range, try again: ")
-        success = board.move(player_id, col)
+        success = Board.move(player_id, col)
         while(not success):
             col = self.get_int_input("Col is full, try another one: ")
-            success = board.move(player_id, col)
+            success = Board.move(player_id, col)
 
         return True
         
 if __name__ == '__main__':
-    board = board()
+    Board = Board()
     player_id = 1
     first_player = random.randint(0, 1)
     if first_player == 0:
         print("Computer (player 0) gets first move.")
-        board.computer_move()
-        board.see_board()
-        board.get_player_move(player_id)
-        board.see_board()
-        board.computer_move()
+        Board.computer_move()
+        Board.see_board()
+        Board.get_player_move(player_id)
+        Board.see_board()
+        Board.computer_move()
     else:
         print("Player 1 gets first move.")
-        board.get_player_move(player_id)
-        board.see_board()
-        board.computer_move()
-    board.see_board()
+        Board.get_player_move(player_id)
+        Board.see_board()
+        Board.computer_move()
+    Board.see_board()
 
-    winner = board.check_for_winner()
+    winner = Board.get_winner()
     while (winner == -1):
-        if (board.check_draw()):
+        if (Board.is_draw()):
             break
-        board.get_player_move(player_id)
-        board.see_board()
-        board.computer_move()
-        board.see_board()
-        winner = board.check_for_winner()
+        Board.get_player_move(player_id)
+        Board.see_board()
+        Board.computer_move()
+        Board.see_board()
+        winner = Board.get_winner()
