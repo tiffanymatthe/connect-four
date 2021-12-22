@@ -23,18 +23,34 @@ class board:
         # https://stackoverflow.com/questions/56496731/coloring-entries-in-an-matrix-2d-numpy-array/56497272
         return self.colors[i]
     
-    def print_a_ndarray(self, map, row_sep=" "):
+    def print_a_ndarray(self, map1, row_sep=" "):
         # https://stackoverflow.com/questions/56496731/coloring-entries-in-an-matrix-2d-numpy-array/56497272
-        n, m = map.shape
+        n, m = map1.shape
+        vertical_padding = 2
+        m = m + vertical_padding # for vertical axis
         fmt_str = "\n".join([row_sep.join(["{}"]*m)]*n)
-        print(fmt_str.format(*map.ravel()))
+        column_labels = ['0','1','2','3','4','5','6']
+        row_labels = ['a','b','c','d','e','f']
+
+        map1 = np.pad(map1, [(0,0), (vertical_padding,0)])
+
+        for i, label in enumerate(row_labels):
+            map1[i, 1] = ' | '
+            map1[i, 0] = label
+
+        print(fmt_str.format(*map1.ravel()))
+        col_axis = '  '.join(map(str, column_labels))
+        print('    ' + '―' * 20)
+        print('    ' + ' ' + col_axis)
 
     def see_board(self):
         """
-        Display board. 'o' represents white, 'x' represents black, '-' represents an empty space.
+        Display board. 'o' represents player 0, 'x' represents player 1, '-' represents an empty space.
         """
         display_board = self.current_state
         coloured_board = np.vectorize(self.get_color_coded_background)(display_board)
+        # print(coloured_board)
+        # coloured_board.append(['0','1','2','3','4','5','6'])
         self.print_a_ndarray(coloured_board, row_sep="")
         print()
 
