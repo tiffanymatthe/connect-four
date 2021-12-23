@@ -195,8 +195,8 @@ class BoardState:
         ...
         Parameters
         ----------
-        player_id : int
-            The player number. 0 or 1.
+        player_id : PlayerId
+            The player number.
         col : int
             The column number to play in, 0 <= col < self.col_num
         

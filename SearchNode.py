@@ -75,7 +75,7 @@ class SearchNode:
         return current_node
 
     def best_action(self):
-        simulation_no = 100
+        simulation_no = 1000
         for i in range(simulation_no):
             v = self._tree_policy()
             # v.board.see_board()
@@ -84,19 +84,73 @@ class SearchNode:
         
         return self.best_child(c_param=0.)
 
-if __name__ == '__main__':
-    initial_state = BoardState.BoardState()
-    initial_state.current_state[5,0] = 0
-    initial_state.current_state[5,1] = 1
-    initial_state.current_state[4,6] = 0
-    initial_state.current_state[5,2] = 1
-    initial_state.current_state[4,2] = 0
-    initial_state.current_state[5,6] = 1
-    initial_state.current_state[4,0] = 0
-    initial_state.current_state[5,3] = 1
-    initial_state.see_board()
-    initial_state.updated_unfilled_cols()
+# if __name__ == '__main__':
+#     initial_state = BoardState.BoardState()
+#     initial_state.current_state[5,0] = 0
+#     initial_state.current_state[5,1] = 1
+#     # initial_state.current_state[4,6] = 0
+#     # initial_state.current_state[5,2] = 1
+#     # initial_state.current_state[4,2] = 0
+#     # initial_state.current_state[5,6] = 1
+#     # initial_state.current_state[4,0] = 0
+#     # initial_state.current_state[5,3] = 1
+#     initial_state.see_board()
+#     initial_state.updated_unfilled_cols()
 
+#     root = SearchNode(initial_state)
+#     selected_node = root.best_action() # for player 0
+#     selected_node.board.see_board()
+
+def AI_move(initial_state):
     root = SearchNode(initial_state)
     selected_node = root.best_action() # for player 0
-    selected_node.board.see_board()
+    return selected_node.board
+
+def get_int_input(message):
+    user_input = input(message)
+    while(not user_input.isnumeric()):
+        user_input = input("Not an int, try again: ")
+    return int(user_input)
+
+def get_player_move(player_id, board):
+    if (board.is_draw()):
+        raise ValueError("DRAW")
+    col = get_int_input("Please enter a column index: ")
+    while(col < 0 or col >= board.num_col):
+        col = get_int_input("Not in range, try again: ")
+    success = False
+    while (not success):
+        try:
+            board = board.move(col, player_id)
+            success = True
+        except ValueError:
+            col = get_int_input("Col is full, try another one: ")
+            board = board.move(col, player_id)
+
+    return board
+
+if __name__ == '__main__':
+    board = BoardState.BoardState()
+    manual_id = PlayerId.PLAYER_1
+    print("Computer (player 0) gets first move.")
+    board = AI_move(board)
+    board.see_board()
+    board = get_player_move(manual_id, board)
+    board.see_board()
+    board = AI_move(board)
+    board.see_board()
+
+    winner = board.get_winner()
+    while (winner == -1):
+        if (board.is_draw()):
+            break
+        board = get_player_move(manual_id, board)
+        board.see_board()
+        winner = board.get_winner()
+        if (winner != -1):
+            break
+        board = AI_move(board)
+        board.see_board()
+        winner = board.get_winner()
+
+    print("Winner is {}".format(winner))
