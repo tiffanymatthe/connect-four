@@ -11,13 +11,21 @@ class BoardState:
         self.current_state = -np.ones((self.col_height, self.num_col)).astype(int)
         self.colors = {
             -1: "\033[40m - \033[0m", # black
-            PlayerId.PLAYER_0: "\033[41m o \033[0m", # red
-            PlayerId.PLAYER_1: "\033[43m x \033[0m" # yellow
+            PlayerId.PLAYER_0.value: "\033[41m o \033[0m", # red
+            PlayerId.PLAYER_1.value: "\033[43m x \033[0m" # yellow
         }
         self.full_marker = -1
 
         # full_marker if completely filled, else first unfilled row index
         self.unfilled_cols = np.ones(self.num_col).astype(int) * (self.col_height - 1)
+
+    def updated_unfilled_cols(self):
+        cols = self.current_state.transpose().tolist()
+        for i, col in enumerate(cols):
+            try:
+                self.unfilled_cols[i] = len(col) - 1 - col[::-1].index(-1)
+            except ValueError:
+                self.unfilled_cols[i] = -1
 
     def get_copy(self):
         new_board = BoardState()
@@ -99,7 +107,6 @@ class BoardState:
         for c in range(0, self.num_col):
             if not self.is_col_full(c):
                 return False
-        print("It's a draw.")
         return True
 
     def find_longest_seq(self, arr, val):
@@ -165,12 +172,24 @@ class BoardState:
             arr_list.append(diag1.tolist())
             arr_list.append(diag2.tolist())
 
-        win = self.is_win_state_in_list(arr_list, token)
-        if win:
-            print("Player {} won!".format(player_id))
+        win = self.is_win_state_in_list(arr_list, player_id)
+        # if win:
+        #     # self.see_board()
+        #     print("Player {} won!".format(player_id))
         return win
 
-    def move(self, player_id: int, col: int):
+    def get_next_player(self):
+        """
+        Gets the next player id, assuming player 0 starts first.
+        """
+        player_0_count = (self.current_state == PlayerId.PLAYER_0.value).sum()
+        player_1_count = (self.current_state == PlayerId.PLAYER_1.value).sum()
+        if player_0_count > player_1_count:
+            return PlayerId.PLAYER_1
+        else:
+            return PlayerId.PLAYER_0
+
+    def move(self, col: int, player_id=None):
         """
         Makes a move for player_id.
         ...
@@ -192,10 +211,12 @@ class BoardState:
         if self.is_col_full(col):
             raise ValueError("Invalid move. Column is full.")
         new_board = self.get_copy()
+        if player_id is None:
+            player_id = self.get_next_player()
         if player_id == PlayerId.PLAYER_0:
-            new_board.state[new_board.unfilled_cols[col], col] = PlayerId.PLAYER_0
+            new_board.current_state[new_board.unfilled_cols[col], col] = PlayerId.PLAYER_0.value
         else:
-            new_board.state[new_board.unfilled_cols[col], col] = PlayerId.PLAYER_1
+            new_board.current_state[new_board.unfilled_cols[col], col] = PlayerId.PLAYER_1.value
         new_board.unfilled_cols[col] -= 1
         return new_board
 
@@ -203,15 +224,17 @@ class BoardState:
         """
         Returns -1 if there is no winner.
         """
-        if self.is_winner(PlayerId.PLAYER_0):
-            return PlayerId.PLAYER_0
-        if self.is_winner(PlayerId.PLAYER_1):
-            return PlayerId.PLAYER_1
+        if self.is_winner(PlayerId.PLAYER_0.value):
+            return PlayerId.PLAYER_0.value
+        if self.is_winner(PlayerId.PLAYER_1.value):
+            return PlayerId.PLAYER_1.value
         else:
             return -1
 
     def is_game_over(self):
-        return self.get_winner != -1
+        if self.is_draw():
+            return True
+        return self.get_winner() != -1
 
     def get_legal_actions(self) -> list:
         """

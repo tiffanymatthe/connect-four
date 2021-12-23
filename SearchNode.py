@@ -14,6 +14,7 @@ class SearchNode:
         self._num_visits = 0
         self._results = {
             1: 0, # wins
+            0: 0, # ties
             -1: 0 # losses
         }
         self._untried_actions = self.board.get_legal_actions()
@@ -30,7 +31,7 @@ class SearchNode:
 
     def expand(self):
         action = self._untried_actions.pop()
-        next_state = self.board.move(self.own_id, action)
+        next_state = self.board.move(action)
         child_node = SearchNode(next_state, parent=self)
         self.children.append(child_node)
         return child_node
@@ -44,8 +45,9 @@ class SearchNode:
         while not current_rollout_state.is_game_over():
             possible_moves = current_rollout_state.get_legal_actions()
             action = self.rollout_policy(possible_moves)
-            current_rollout_state = current_rollout_state.move(self.own_id, action) # not sure about id
-        return current_rollout_state.game_result(self.own_id) # ???
+            current_rollout_state = current_rollout_state.move(action)
+            # current_rollout_state.see_board()
+        return current_rollout_state.game_result(self.own_id.value)
 
     def backpropagate(self, result):
         self._num_visits += 1.
@@ -76,6 +78,7 @@ class SearchNode:
         simulation_no = 100
         for i in range(simulation_no):
             v = self._tree_policy()
+            # v.board.see_board()
             reward = v.rollout()
             v.backpropagate(reward)
         
@@ -83,6 +86,17 @@ class SearchNode:
 
 if __name__ == '__main__':
     initial_state = BoardState.BoardState()
+    initial_state.current_state[5,0] = 0
+    initial_state.current_state[5,1] = 1
+    initial_state.current_state[4,6] = 0
+    initial_state.current_state[5,2] = 1
+    initial_state.current_state[4,2] = 0
+    initial_state.current_state[5,6] = 1
+    initial_state.current_state[4,0] = 0
+    initial_state.current_state[5,3] = 1
+    initial_state.see_board()
+    initial_state.updated_unfilled_cols()
+
     root = SearchNode(initial_state)
-    selected_node = root.best_action()
+    selected_node = root.best_action() # for player 0
     selected_node.board.see_board()
