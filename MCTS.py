@@ -24,7 +24,9 @@ class MCTS:
         def score(n):
             if self.N[n] == 0:
                 return float("-inf")  # avoid unseen moves
-            return self.Q[n] / self.N[n]  # average reward
+            # http://www.incompleteideas.net/609%20dropbox/other%20readings%20and%20resources/MCTS-survey.pdf
+            return self.N[n] # robust child
+            # return self.Q[n] / self.N[n]  # average reward (max child)
 
         return max(self.children[node], key=score)
 
@@ -62,12 +64,7 @@ class MCTS:
         invert_reward = True
         while True:
             if node.is_terminal():
-                try:
-                    reward = node.reward()
-                except RuntimeError:
-                    node.see_board()
-                    print(node.turn)
-                    raise RuntimeError("custom")
+                reward = node.reward()
                 return 1 - reward if invert_reward else reward
             node = node.find_random_child()
             invert_reward = not invert_reward
@@ -138,4 +135,4 @@ def play_game(iterations):
     print("Winner is {}: {}".format(winner, board.colors[winner]))
 
 if __name__ == "__main__":
-    play_game(100)
+    play_game(200)
