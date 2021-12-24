@@ -2,13 +2,12 @@
 
 import random
 import numpy as np
-from PlayerId import PlayerId
 
 class Node():
     """
-    A representation of a single board state.
+    https://gist.github.com/qpwo/c538c6f73727e254fdc7fab81024f6e1
+    A representation of a single board state for Connect 4.
     MCTS works by constructing a tree of these Nodes.
-    Could be e.g. a chess or checkers board state.
     """
 
     def __init__(self) -> None:
@@ -18,8 +17,8 @@ class Node():
         self.current_state = -np.ones((self.col_height, self.num_col)).astype(int)
         self.colors = {
             -1: "\033[40m - \033[0m", # black
-            PlayerId.PLAYER_0.value: "\033[41m o \033[0m", # red
-            PlayerId.PLAYER_1.value: "\033[43m x \033[0m" # yellow
+            0: "\033[41m o \033[0m", # red
+            1: "\033[43m x \033[0m" # yellow
         }
         self.full_marker = -1
         self.turn = 0 # either 0 or 1
@@ -28,6 +27,9 @@ class Node():
         self.unfilled_cols = np.ones(self.num_col).astype(int) * (self.col_height - 1)
 
     def updated_unfilled_cols(self):
+        """
+        Update row indices of unfilled columns in Connect 4.
+        """
         cols = self.current_state.transpose().tolist()
         for i, col in enumerate(cols):
             try:
@@ -36,10 +38,14 @@ class Node():
                 self.unfilled_cols[i] = -1
 
     def get_copy(self):
-        new_board = Node()
-        new_board.current_state = self.current_state.copy()
-        new_board.unfilled_cols = self.unfilled_cols.copy()
-        return new_board
+        """
+        Gets copy of node.
+        """
+        new_node = Node()
+        new_node.current_state = self.current_state.copy()
+        new_node.unfilled_cols = self.unfilled_cols.copy()
+        new_node.turn = self.turn
+        return new_node
 
     def get_color_coded_background(self, i):
         """
@@ -50,8 +56,8 @@ class Node():
     def print_a_ndarray(self, map1, row_sep=" "):
         """
         Prints array.
+        https://stackoverflow.com/questions/56496731/coloring-entries-in-an-matrix-2d-numpy-array/56497272
         """
-        # https://stackoverflow.com/questions/56496731/coloring-entries-in-an-matrix-2d-numpy-array/56497272
         n, m = map1.shape
         vertical_padding = 2
         m = m + vertical_padding # for vertical axis
@@ -95,7 +101,7 @@ class Node():
         Parameters
         ----------
         col_num : int
-            The column number to check if full. Needs to be valid.
+            The column number to check if valid.
 
         Raises
         ------
@@ -181,9 +187,6 @@ class Node():
             arr_list.append(diag2.tolist())
 
         win = self.is_win_state_in_list(arr_list, player_id)
-        # if win:
-        #     # self.see_board()
-        #     print("Player {} won!".format(player_id))
         return win
 
     def move(self, col: int):
@@ -202,6 +205,8 @@ class Node():
 
         Returns new Node.
         """
+        if (self.is_terminal()):
+            raise RuntimeError("Move denied. Board is terminal.")
         self.check_col_valid(col)
         if self.is_col_full(col):
             raise ValueError("Invalid move. Column is full.")
@@ -213,7 +218,7 @@ class Node():
 
     def get_winner(self) -> int:
         """
-        Returns -1 if there is no winner.
+        Returns -1 if there is no winner. Else returns 0 or 1.
         """
         if self.is_winner(0):
             return 0
@@ -223,32 +228,40 @@ class Node():
             return -1
 
     def find_children(self):
-        "All possible successors of this board state"
+        """
+        Returns all possible successors of this board state
+        """
+        if self.is_terminal():
+            return {}
         cols = np.where(self.unfilled_cols != self.full_marker)[0].tolist()
-        children = set(self.move(c) for c in cols)
-        return children
+        return set(self.move(c) for c in cols)
 
     def find_random_child(self):
-        "Random successor of this board state (for more efficient simulation)"
+        """
+        Returns random successor of this board state (for more efficient simulation)
+        """
         children = self.find_children()
         return random.choice(tuple(children))
 
     def is_terminal(self):
-        "Returns True if the node has no children"
+        """
+        Returns True if the node has no children (reached end of game)
+        """
         if self.is_draw():
             return True
         return self.get_winner() != -1
 
     def reward(self):
         if not self.is_terminal():
-            raise RuntimeError(f"reward called on nonterminal board")
+            self.see_board()
+            raise RuntimeError("reward called on nonterminal board")
         if self.get_winner() == self.turn:
             # It's your turn and you've already won. Should be impossible.
-            return 1
-            # raise RuntimeError(f"reward called on unreachable board")
+            raise RuntimeError(f"reward called on unreachable board")
         if self.turn == (not self.get_winner()):
             return 0  # Your opponent has just won. Bad.
         if self.get_winner() == -1:
             return 0.5  # Board is a tie
-        # The winner is neither True, False, nor None
+        # The winner is neither True, False, nor -1
+        self.see_board()
         raise RuntimeError(f"board has unknown winner type")

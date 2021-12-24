@@ -4,9 +4,10 @@ import math
 import Node
 
 class MCTS:
+    # https://gist.github.com/qpwo/c538c6f73727e254fdc7fab81024f6e1
     "Monte Carlo tree searcher. First rollout the tree then choose a move."
 
-    def __init__(self, exploration_weight=1):
+    def __init__(self, exploration_weight=math.sqrt(2)):
         self.Q = defaultdict(int)  # total reward of each node
         self.N = defaultdict(int)  # total visit count for each node
         self.children = dict()  # children of each node
@@ -61,7 +62,12 @@ class MCTS:
         invert_reward = True
         while True:
             if node.is_terminal():
-                reward = node.reward()
+                try:
+                    reward = node.reward()
+                except RuntimeError:
+                    node.see_board()
+                    print(node.turn)
+                    raise RuntimeError("custom")
                 return 1 - reward if invert_reward else reward
             node = node.find_random_child()
             invert_reward = not invert_reward
@@ -88,11 +94,6 @@ class MCTS:
             )
 
         return max(self.children[node], key=uct)
-
-def AI_move(initial_state):
-    root = SearchNode(initial_state)
-    selected_node = root.best_action() # for player 0
-    return selected_node.board
 
 def get_int_input(message):
     user_input = input(message)
@@ -134,7 +135,7 @@ def play_game(iterations):
             break
 
     winner = board.get_winner()
-    print("winner is {}".format(winner))
+    print("Winner is {}: {}".format(winner, board.colors[winner]))
 
 if __name__ == "__main__":
-    play_game(300)
+    play_game(100)
