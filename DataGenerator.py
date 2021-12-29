@@ -56,20 +56,14 @@ class DataGenerator:
         col: numpy array of length 6 with values of -1, 0 or 1.
 
         Returns true if there is a floating token.
-        TODO:
-        - optimize code, for loops seems inefficient
         """
-        empty_count = 0
-        for i in range(6):
-            if col[i] == -1:
-                empty_count += 1
-            else:
-                break
+        token_groups = np.array([token for token, group in itertools.groupby(col)])
+        empty_count - np.count_nonzero(token_groups == -1)
+        if empty_count > 0:
+            if col[0] != -1:
+                return True
 
-        if empty_count == 6:
-            return False
-        
-        return np.count_nonzero(col[empty_count:-1] == -1) > 0
+        return empty_count > 1
 
     def get_nn_input(state, current_player_colour):
         """
