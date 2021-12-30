@@ -242,7 +242,7 @@ class Node():
         """
         children = self.find_children()
         return random.choice(tuple(children))
-
+    
     def is_terminal(self):
         """
         Returns True if the node has no children (reached end of game)
@@ -251,6 +251,7 @@ class Node():
             return True
         return self.get_winner() != -1
 
+    #reward is utility
     def reward(self):
         if not self.is_terminal():
             self.see_board()

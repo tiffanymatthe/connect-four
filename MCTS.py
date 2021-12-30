@@ -91,7 +91,7 @@ class MCTS:
             )
 
         return max(self.children[node], key=uct)
-
+   
 def get_int_input(message):
     user_input = input(message)
     while(not user_input.isnumeric()):
