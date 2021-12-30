@@ -186,8 +186,23 @@ class DataGeneratorTests(unittest.TestCase):
         self.assertTrue((stack[0] == current_player_layer).all())
         self.assertTrue((stack[1] == opponent_player_layer).all())
         self.assertTrue((stack[2] == colour_layer).all())
-        
 
+    # -------------------- GET CURRENT PLAYER TESTS --------------------------------------
+    def test_current_player_empty_board(self):
+        state = -np.ones((6,7))
+        self.assertEqual(DataGenerator.get_current_player(state), 1)
+
+    def test_current_player_player_zero(self):
+        state = -np.ones((6,7))
+        state[-1,-1] = 1
+        self.assertEqual(DataGenerator.get_current_player(state), 0)
+
+    def test_current_player_player_zero_2(self):
+        state = -np.ones((6,7))
+        state[-1,-1] = 1
+        state[-1,-2] = 1
+        state[-1, 0] = 0
+        self.assertEqual(DataGenerator.get_current_player(state), 0)
 
 if __name__ == '__main__':
     unittest.main()

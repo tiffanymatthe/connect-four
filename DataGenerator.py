@@ -85,11 +85,28 @@ class DataGenerator:
 
         Returns 3 x 6 x 7 numpy array.
 
-        Raises ValueError if state is an invalid game state.
+        Raises ValueError if state is an invalid game state or if current_player_colour is wrong.
+        TODO: figure out if current_player_colour input is needed
         """
         if not DataGenerator.validate_state(state):
             raise ValueError("Invalid game state.")
+        if DataGenerator.get_current_player(state) != current_player_colour:
+            raise ValueError("Invalid player colour {}".format(current_player_colour))
         plane_1 = np.isin(state, current_player_colour)
         plane_2 = np.isin(state, not current_player_colour)
         plane_3 = np.ones((6,7)) * current_player_colour
         return np.stack((plane_1, plane_2, plane_3))
+
+    @staticmethod
+    def get_current_player(state) -> int:
+        """
+        state: valid connect-4 game state
+
+        Returns current player (the one who needs to make a move next). Assumes 1 moves first in game.
+
+        Raises ValueError if state is an invalid game state.
+        """
+        if not DataGenerator.validate_state(state):
+            raise ValueError("Invalid game state.")
+        
+        return int((np.count_nonzero(state == 1) - np.count_nonzero(state == 0)) != 1)
