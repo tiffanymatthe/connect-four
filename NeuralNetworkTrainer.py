@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from MCTS import MCTS
+from Node import Node
 
 class NeuralNetworkTrainer():
     def __init__(self) -> None:
@@ -32,7 +34,18 @@ class NeuralNetworkTrainer():
         pass
 
     def __play_self_play_game(MCTS_iterations):
-        pass
+        # how to do self-play? two MCTS trees?
+        # need to somehow save (s, pi, z) at intervals
+        # how to get z from MCTS? is it just the result of the actual game? so need to populate at end?
+        # TODO: implement
+        tree = MCTS()
+        board = Node()
+
+        while (not board.is_terminal()):
+            for _ in range(MCTS_iterations):
+                tree.do_rollout(board)
+            board = tree.choose(board)
+
 
     def __train_model(self, model):
         # trains model for the ith iteration
