@@ -11,6 +11,13 @@ class Node():
     """
 
     def __init__(self) -> None:
+        """
+        0 = marker for red player
+        1 = marker for yellow player
+        -1 = marker for empty space
+
+        player 1 always goes first
+        """
         self.num_col = 7
         self.col_height = 6
         # 0 is red, 1 is yellow, -1 is black
@@ -21,7 +28,7 @@ class Node():
             1: "\033[43m x \033[0m" # yellow
         }
         self.full_marker = -1
-        self.turn = 0 # either 0 or 1
+        self.turn = 1 # either 0 or 1, starts off with 1 always
 
         # full_marker if completely filled, else first unfilled row index
         self.unfilled_cols = np.ones(self.num_col).astype(int) * (self.col_height - 1)
