@@ -2,6 +2,7 @@
 import numpy as np
 from DataGenerator import DataGenerator
 
+
 class C4Game():
     def __init__(self, history=None) -> None:
         self.history = history or []
@@ -15,11 +16,12 @@ class C4Game():
         self.player1 = 1
         self.player2 = 0
         self.empty = -1
-        self.win_num = 4 # need 4 tokens in a line to win
+        self.win_num = 4  # need 4 tokens in a line to win
 
         # TODO: check if initial game state should be part of history or not. should be ok
         if history is None:
-            self.history.append(self.empty * np.ones((self.col_height, self.num_col)).astype(int))
+            self.history.append(
+                self.empty * np.ones((self.col_height, self.num_col)).astype(int))
 
     def terminal(self) -> bool:
         """Returns True if the game has reached a terminal state (win, loss, draw). False otherwise."""
@@ -30,23 +32,22 @@ class C4Game():
         full_board = not (last_state == self.empty).any()
         if full_board:
             return True
-        
-        arr_list = last_state.transpose().tolist() # columns
-        arr_list.extend(last_state.tolist()) # rows
+
+        arr_list = last_state.transpose().tolist()  # columns
+        arr_list.extend(last_state.tolist())  # rows
         diagonal_indices = range(-2, 4)
         for idx in diagonal_indices:
             diag1 = np.diagonal(last_state, offset=idx)
             diag2 = np.diagonal(np.fliplr(last_state), offset=idx)
-            arr_list.append(diag1.tolist()) # diagonals
-            arr_list.append(diag2.tolist()) # diagonals
+            arr_list.append(diag1.tolist())  # diagonals
+            arr_list.append(diag2.tolist())  # diagonals
 
         return self.__is_win_state_in_list(arr_list, self.player1)\
-             or self.__is_win_state_in_list(arr_list, self.player2)
-
+            or self.__is_win_state_in_list(arr_list, self.player2)
 
     def terminal_value(self, to_play):
         """Returns 1 if player to_play wins, 0 if tied, -1 if otherwise. Game needs to be terminal."""
-        if self.terminal_value == -100:
+        if self.__terminal_value == -100:
             raise Exception("Run terminal() first.")
         return
 
@@ -61,16 +62,19 @@ class C4Game():
         last_state = self.history[-1]
         unfilled_cols = self.__get_unfilled_cols(last_state)
         if self.__is_col_full(unfilled_cols, action):
-            raise ValueError("Invalid action {}. Column is full.".format(action))
+            raise ValueError(
+                "Invalid action {}. Column is full.".format(action))
         new_state = last_state.copy()
         new_state[unfilled_cols[action], action] = self.to_play()
         self.history.append(action)
 
     def store_search_statistics(self, root):
         # https://ai.stackexchange.com/questions/25451/how-does-alphazeros-mcts-work-when-starting-from-the-root-node
-        sum_visits = sum(child.visit_count for child in root.children.itervalues())
+        sum_visits = sum(
+            child.visit_count for child in root.children.itervalues())
         self.child_visits.append([
-            root.children[a].visit_count / sum_visits if a in root.children else 0
+            root.children[a].visit_count /
+            sum_visits if a in root.children else 0
             for a in range(self.num_actions)
         ])
 
@@ -97,10 +101,11 @@ class C4Game():
         Returns length of longest sequence of val in arr.
         Inspired by https://stackoverflow.com/a/38161867
         """
-        idx_pairs = np.where(np.diff(np.hstack(([False],arr==val,[False]))))[0].reshape(-1,2)
-        seq_lengths = np.diff(idx_pairs,axis=1)
+        idx_pairs = np.where(np.diff(np.hstack(([False], arr == val, [False]))))[
+            0].reshape(-1, 2)
+        seq_lengths = np.diff(idx_pairs, axis=1)
         if len(seq_lengths) > 0:
-            return max(np.diff(idx_pairs,axis=1))
+            return max(np.diff(idx_pairs, axis=1))
         else:
             return 0
 
