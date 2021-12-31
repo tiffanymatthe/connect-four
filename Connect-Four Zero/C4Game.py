@@ -10,7 +10,7 @@ class C4Game():
         self.num_col = 7
         self.col_height = 6
 
-        self.__terminal_value = -100
+        self.__winner = -100
 
         self.player1 = 1
         self.player2 = 0
@@ -29,6 +29,7 @@ class C4Game():
 
         full_board = not (last_state == self.empty).any()
         if full_board:
+            self.__winner = 0
             return True
         
         arr_list = last_state.transpose().tolist() # columns
@@ -40,18 +41,33 @@ class C4Game():
             arr_list.append(diag1.tolist()) # diagonals
             arr_list.append(diag2.tolist()) # diagonals
 
-        return self.__is_win_state_in_list(arr_list, self.player1)\
-             or self.__is_win_state_in_list(arr_list, self.player2)
+        p1_win = self.__is_win_state_in_list(arr_list, self.player1)
+        p2_win = self.__is_win_state_in_list(arr_list, self.player2)
+
+        if p1_win:
+            self.__winner = self.player1
+        if p2_win:
+            self.__winner = self.player2
+
+        return p1_win or p2_win
 
 
     def terminal_value(self, to_play):
         """Returns 1 if player to_play wins, 0 if tied, -1 if otherwise. Game needs to be terminal."""
-        if self.terminal_value == -100:
-            raise Exception("Run terminal() first.")
-        return
+        if self.__winner == -100:
+            raise Exception("Run terminal() first to ensure game is terminal.")
+        if self.__winner == to_play:
+            return 1
+        if self.__winner == 0:
+            return 0
+        else:
+            return -1
 
     def legal_actions(self):
-        return []
+        """Returns legal actions of latest game state as a list of open column indices."""
+        last_state = self.history[-1]
+        unfilled_cols = self.__get_unfilled_cols(last_state)
+        return np.where(unfilled_cols != -100)[0].tolist()
 
     def clone(self):
         return C4Game(list(self.history))
