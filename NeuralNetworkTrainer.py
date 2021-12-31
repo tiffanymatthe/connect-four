@@ -2,6 +2,18 @@
 from MCTS import MCTS
 from Node import Node
 
+from keras.models import Model
+from keras.layers.normalization import BatchNormalization
+from keras.layers.convolutional import Conv2D
+from keras.layers.convolutional import MaxPooling2D
+from keras.layers.core import Activation
+from keras.layers.core import Dropout
+from keras.layers.core import Lambda
+from keras.layers.core import Dense
+from keras.layers import Flatten
+from keras.layers import Input
+import tensorflow as tf
+
 class NeuralNetworkTrainer():
     def __init__(self) -> None:
         # should store data from self-play games as training data
@@ -13,19 +25,58 @@ class NeuralNetworkTrainer():
     def get_common_layers(inputs):
         # Returns a tensor representing the common layers
         # TODO: implement
-        pass
+
+        x = Conv2D(32, (3, 3), padding="same")(inputs)
+        x = Activation("relu")(x)
+        x = BatchNormalization(axis=-1)(x)
+        x = MaxPooling2D(pool_size=(2, 2))(x)
+        x = Dropout(0.25)(x)
+        
+        return x 
 
     @staticmethod
     def get_policy_branch(inputs):
         # Returns a tensor to put in the model output
         # TODO: implement
+        """
+        This is assuming that inputs are the image arrays with 6x7 dimension
+        and 3 feature planes. We know that the size of the output should be 7
+        from before hand therefore, that is our output size.
+        """
         x = NeuralNetworkTrainer.get_common_layers(inputs)
+        x = Flatten()(x)
+        x = Dense(128)(x)
+        x = Activation("relu")(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.5)(x)
+
+        x = Dense(7)(x) #size of the output
+        x = Activation("softmax", name="probability_output")(x)
+
+        return x
 
     @staticmethod
     def get_value_branch(inputs):
         # Returns a tensor to put in the model output
         # TODO: implement
+        """
+        In this function we know that the result of this branch should be a 
+        0 or a 1 representing whether the current player is going to win or not. 
+        Hence, the size of the output is just 1. 
+
+        Not sure about how to call the binary step function here. 
+        """
         x = NeuralNetworkTrainer.get_common_layers(inputs)
+        x = Flatten()(x)
+        x = Dense(128)(x)
+        x = Activation("relu")(x)
+        x = BatchNormalization()(x)
+        x = Dropout(0.5)(x)
+
+        x = Dense(1)(x) #size of the output
+        x = Activation("binary", name="value_output")(x)
+
+        return x
 
     @staticmethod
     def get_model():
