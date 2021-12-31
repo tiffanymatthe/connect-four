@@ -2,6 +2,7 @@
 import C4Config
 import numpy as np
 
+
 class ReplayBuffer():
     def __init__(self, config: C4Config) -> None:
         self.window_size = config.window_size

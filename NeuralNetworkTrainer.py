@@ -3,7 +3,6 @@ from MCTS import MCTS
 from Node import Node
 
 
-
 class NeuralNetworkTrainer():
     def __init__(self) -> None:
         # should store data from self-play games as training data
@@ -23,7 +22,3 @@ class NeuralNetworkTrainer():
             for _ in range(MCTS_iterations):
                 tree.do_rollout(board)
             board = tree.choose(board)
-
-
-    
-        

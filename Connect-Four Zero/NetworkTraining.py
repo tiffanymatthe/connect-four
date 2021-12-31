@@ -173,9 +173,7 @@ def launch_job(f, *args):
     f(*args)
 
 
-
-
-#model training code from NeuralNetworkTrainer that I thought be useful 
+# model training code from NeuralNetworkTrainer that I thought be useful
 # def __train_model(self, model):
 #         # trains model for the ith iteration
 #         # how to use train_labels if there are 2 of them?

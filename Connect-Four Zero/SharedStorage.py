@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import Network
 
+
 class SharedStorage():
     def __init__(self):
         self._networks = {}
@@ -13,6 +14,7 @@ class SharedStorage():
 
     def save_network(self, step: int, network: Network):
         self._networks[step] = network
+
 
 def make_uniform_network() -> Network:
     pass
