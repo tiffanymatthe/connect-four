@@ -14,18 +14,21 @@ import tensorflow as tf
 
 
 class Network(object):
+    def __init__(self) -> None:
+        self.model = self.__get_model()
 
     def inference(self, image):
-        return (-1, {})  # Value, Policy
+        """Returns a tuple with value and policy: (-1, {})"""
+        return self.model.predict(image)
 
     def get_weights(self):
-        # Returns the weights of this network.
-        return []
+        # Returns the weights of this network as a list.
+        # https://github.com/google/prettytensor/issues/6
+        return [v for v in tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES) if v.name.endswith('weights:0')]
 
     @staticmethod
     def get_common_layers(inputs):
         # Returns a tensor representing the common layers
-
         x = Conv2D(32, (3, 3), padding="same")(inputs)
         x = Activation("relu")(x)
         x = BatchNormalization(axis=-1)(x)
@@ -36,8 +39,6 @@ class Network(object):
 
     @staticmethod
     def get_policy_branch(inputs):
-        # Returns a tensor to put in the model output
-        # TODO: implement
         """
         This is assuming that inputs are the image arrays with 6x7 dimension
         and 3 feature planes. We know that the size of the output should be 7
@@ -57,8 +58,6 @@ class Network(object):
 
     @staticmethod
     def get_value_branch(inputs):
-        # Returns a tensor to put in the model output
-        # TODO: implement
         """
         In this function we know that the result of this branch should be a 
         0 or a 1 representing whether the current player is going to win or not. 
@@ -89,16 +88,11 @@ class Network(object):
 
         return model
 
-    @staticmethod
-    def get_model():
-        # Returns TF model with two output branches. should already be compiled.
-        # TODO: implement
+    def __get_model(self):
+        # Returns TF model with two output branches.
         width = 7
         height = 6
-        model = Network.compile_model(width, height)
-
-        return model
+        return Network.compile_model(width, height)
 
     def print_model_summary(self):
-        model = self.get_model()
-        print(model.summary())
+        print(self.model.summary())

@@ -4,10 +4,11 @@ import Node
 import numpy as np
 import itertools
 
+
 class DataGenerator:
     def __init__(self):
         pass
-    
+
     @staticmethod
     def validate_label(move_probabilities, win_probability):
         """
@@ -50,7 +51,7 @@ class DataGenerator:
         unique_values = np.unique(state)
         if unique_values.size > 3:
             return False
-        only_contains_expected = np.isin(unique_values, [-1,0,1])
+        only_contains_expected = np.isin(unique_values, [-1, 0, 1])
         if np.any(~only_contains_expected):
             return False
         diff = np.count_nonzero(state == 1) - np.count_nonzero(state == 0)
@@ -69,7 +70,8 @@ class DataGenerator:
 
         Returns true if there is a floating token.
         """
-        token_groups = np.array([token for token, group in itertools.groupby(col)])
+        token_groups = np.array(
+            [token for token, group in itertools.groupby(col)])
         empty_count = np.count_nonzero(token_groups == -1)
         if empty_count > 0:
             if col[0] != -1:
@@ -97,10 +99,11 @@ class DataGenerator:
         if not DataGenerator.validate_state(state):
             raise ValueError("Invalid game state.")
         if DataGenerator.get_current_player(state) != current_player_colour:
-            raise ValueError("Invalid player colour {}".format(current_player_colour))
+            raise ValueError(
+                "Invalid player colour {}".format(current_player_colour))
         plane_1 = np.isin(state, current_player_colour)
         plane_2 = np.isin(state, not current_player_colour)
-        plane_3 = np.ones((6,7)) * current_player_colour
+        plane_3 = np.ones((6, 7)) * current_player_colour
         return np.stack((plane_1, plane_2, plane_3))
 
     @staticmethod
@@ -114,5 +117,5 @@ class DataGenerator:
         """
         if not DataGenerator.validate_state(state):
             raise ValueError("Invalid game state.")
-        
+
         return int((np.count_nonzero(state == 1) - np.count_nonzero(state == 0)) != 1)
