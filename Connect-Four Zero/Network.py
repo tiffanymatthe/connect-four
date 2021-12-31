@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from keras.models import Model
-from keras.layers.normalization import BatchNormalization
+from keras.layers import BatchNormalization
 from keras.layers.convolutional import Conv2D
 from keras.layers.convolutional import MaxPooling2D
 from keras.layers.core import Activation
@@ -81,11 +81,11 @@ class Network(object):
     @staticmethod
     def compile_model(width, height):
         # 3 because we will 3 channels (red tokens, yellow tokens, board state)
-        inputs = Inputs(shape=(height, width, 3))
+        inputs = Input(shape=(height, width, 3))
         value_branch = Network.get_value_branch(inputs)
         policy_branch = Network.get_policy_branch(inputs)
 
-        model = Model(input=inputs, output=[value_branch, policy_branch])
+        model = Model(inputs=inputs, outputs=[value_branch, policy_branch])
 
         return model
 
@@ -102,8 +102,3 @@ class Network(object):
     def print_model_summary(self):
         model = self.get_model()
         print(model.summary())
-
-
-if __name__ == "__main__":
-    network = Network()
-    network.print_model_summary()
