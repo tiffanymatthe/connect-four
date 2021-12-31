@@ -13,8 +13,10 @@ class DataGenerator:
         """
         Validates labels.
 
-        move_probabilities: numpy array of length 7 with floats from 0 to 1, inclusive. Represents the probability of placing a token in the ith column of the connect-4 board.
-        win_probability: probability that current player (one that needs to make a move) wins from the current game state. Value is in range [-1,1], end points inclusive. 1 if current player wins, -1 if opponent wins.
+        move_probabilities: numpy array of length 7 with floats from 0 to 1, inclusive.
+        Represents the probability of placing a token in the ith column of the connect-4 board.
+        win_probability: probability that current player (one that needs to make a move) wins from the current game state.
+        Value is in range [-1,1], end points inclusive. 1 if current player wins, -1 if opponent wins.
 
         Returns True if label is ok, False otherwise.
         """
@@ -33,7 +35,10 @@ class DataGenerator:
         """
         state: 6 x 7 numpy array representing the connect-4 game state. Comes from MCTS node.
 
-        Returns True if array only contains -1, 0, and 1, has the same number of 0 and 1 (or one more 1 value since 1 tokens start the game first), and has no floating tokens. A floating token is a 0 or 1 that has one or multiple -1 under it in the array.
+        Returns True if array only contains -1, 0, and 1,
+        has the same number of 0 and 1 (or one more 1 value since 1 tokens start the game first), 
+        and has no floating tokens.
+        A floating token is a 0 or 1 that has one or multiple -1 under it in the array.
         TODO: exclude states with multiple winning patterns found
 
         Returns False otherwise.
@@ -75,7 +80,8 @@ class DataGenerator:
     @staticmethod
     def get_nn_input(state, current_player_colour):
         """
-        state: representation of connect-4 board, size 6 x 7. Only contains values -1, 0, and 1. -1 represents empty space, 0 and 1 represent player tokens.
+        state: representation of connect-4 board, size 6 x 7. Only contains values -1, 0, and 1.
+        -1 represents empty space, 0 and 1 represent player tokens.
         current_player_colour: 0 or 1, representing token of current player. assume correct.
 
         Converts game state (as found in Node) to a 3 x 6 x 7 image stack with 3 binary feature planes.

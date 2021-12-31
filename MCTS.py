@@ -134,5 +134,16 @@ def play_game(iterations):
     winner = board.get_winner()
     print("Winner is {}: {}".format(winner, board.colors[winner]))
 
+def self_play(iterations):
+    tree = MCTS()
+    board = Node.Node()
+    board.see_board()
+    while not board.is_terminal():
+        for _ in range(iterations):
+            tree.do_rollout(board)
+        board = tree.choose(board)
+        board.see_board()
+
 if __name__ == "__main__":
     play_game(200)
+    # self_play(200)
