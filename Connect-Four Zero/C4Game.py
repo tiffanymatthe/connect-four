@@ -104,6 +104,9 @@ class C4Game(object):
                 self.child_visits[state_index])
 
     def to_play(self):
+        """
+        This method returns the player id of which player's turn it is 
+        """
         return len(self.history) % 2
 
     def __find_longest_seq(self, arr, val) -> int:
