@@ -97,7 +97,7 @@ def ucb_score(config: C4Config, parent: C4Node, child: C4Node):
                     config.pb_c_base) + config.pb_c_init
     pb_c *= math.sqrt(parent.visit_count) / (child.visit_count + 1)
 
-    prior_score = pb_c * child.prior
+    prior_score = pb_c * child.priorx
     value_score = child.value()
     return prior_score + value_score
 
