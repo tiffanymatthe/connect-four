@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+from os import stat
 import numpy as np
 import itertools
 
@@ -84,17 +85,18 @@ class DataGenerator(object):
         -1 represents empty space, 0 and 1 represent player tokens.
         current_player_colour: 0 or 1, representing token of current player. assume correct.
 
-        Converts game state (as found in Node) to a 3 x 6 x 7 image stack with 3 binary feature planes.
+        Converts game state (as found in Node) to a 6 x 7 x 3 image stack with 3 binary feature planes.
         1st plane = current player's tokens.
         2nd plane = opponent player's tokens.
         3rd plane = constant plane representing colour to play.
 
-        Returns 3 x 6 x 7 numpy array.
+        Returns 6 x 7 x 3 numpy array.
 
         Raises ValueError if state is an invalid game state or if current_player_colour is wrong.
         TODO: figure out if current_player_colour input is needed
         """
         if not DataGenerator.validate_state(state):
+            DataGenerator.see_board(state)
             raise ValueError("Invalid game state.")
         if DataGenerator.get_current_player(state) != current_player_colour:
             raise ValueError(
@@ -102,7 +104,7 @@ class DataGenerator(object):
         plane_1 = np.isin(state, current_player_colour)
         plane_2 = np.isin(state, not current_player_colour)
         plane_3 = np.ones((6, 7)) * current_player_colour
-        return np.stack((plane_1, plane_2, plane_3))
+        return np.stack((plane_1, plane_2, plane_3), axis=-1)
 
     @staticmethod
     def get_current_player(state) -> int:
@@ -117,3 +119,49 @@ class DataGenerator(object):
             raise ValueError("Invalid game state.")
 
         return int((np.count_nonzero(state == 1) - np.count_nonzero(state == 0)) != 1)
+
+    @staticmethod
+    def __get_color_coded_background(i):
+        """
+        Get marker to print for a certain player or empty space.
+        """
+        colors = {
+            -1: "\033[40m - \033[0m",  # black
+            0: "\033[41m o \033[0m",  # red
+            1: "\033[43m x \033[0m"  # yellow
+        }
+        return colors[i]
+
+    @staticmethod
+    def __print_a_ndarray(map1, row_sep=" "):
+        """
+        Prints array.
+        https://stackoverflow.com/questions/56496731/coloring-entries-in-an-matrix-2d-numpy-array/56497272
+        """
+        n, m = map1.shape
+        vertical_padding = 2
+        m = m + vertical_padding  # for vertical axis
+        fmt_str = "\n".join([row_sep.join(["{}"]*m)]*n)
+        column_labels = ['0', '1', '2', '3', '4', '5', '6']
+        row_labels = ['a', 'b', 'c', 'd', 'e', 'f']
+
+        map1 = np.pad(map1, [(0, 0), (vertical_padding, 0)])
+
+        for i, label in enumerate(row_labels):
+            map1[i, 1] = ' | '
+            map1[i, 0] = label
+
+        print(fmt_str.format(*map1.ravel()))
+        col_axis = '  '.join(map(str, column_labels))
+        print('    ' + '―' * 20)
+        print('    ' + ' ' + col_axis)
+
+    @staticmethod
+    def see_board(display_board):
+        """
+        Display Board. 'o' represents player 0, 'x' represents player 1, '-' represents an empty space.
+        """
+        coloured_board = np.vectorize(
+            DataGenerator.__get_color_coded_background)(display_board)
+        DataGenerator.__print_a_ndarray(coloured_board, row_sep="")
+        print()
