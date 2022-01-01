@@ -2,7 +2,8 @@
 import C4Config
 import numpy as np
 
-class ReplayBuffer():
+
+class ReplayBuffer(object):
     def __init__(self, config: C4Config) -> None:
         self.window_size = config.window_size
         self.batch_size = config.batch_size

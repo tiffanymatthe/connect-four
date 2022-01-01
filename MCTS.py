@@ -3,6 +3,7 @@ from collections import defaultdict
 import math
 import Node
 
+
 class MCTS:
     # https://gist.github.com/qpwo/c538c6f73727e254fdc7fab81024f6e1
     "Monte Carlo tree searcher. First rollout the tree then choose a move."
@@ -25,7 +26,7 @@ class MCTS:
             if self.N[n] == 0:
                 return float("-inf")  # avoid unseen moves
             # http://www.incompleteideas.net/609%20dropbox/other%20readings%20and%20resources/MCTS-survey.pdf
-            return self.N[n] # robust child
+            return self.N[n]  # robust child
             # return self.Q[n] / self.N[n]  # average reward (max child)
 
         return max(self.children[node], key=score)
@@ -92,11 +93,13 @@ class MCTS:
 
         return max(self.children[node], key=uct)
 
+
 def get_int_input(message):
     user_input = input(message)
     while(not user_input.isnumeric()):
         user_input = input("Not an int, try again: ")
     return int(user_input)
+
 
 def get_player_move(board):
     if (board.is_draw()):
@@ -114,6 +117,7 @@ def get_player_move(board):
             board = board.move(col)
 
     return board
+
 
 def play_game(iterations):
     tree = MCTS()
@@ -134,6 +138,7 @@ def play_game(iterations):
     winner = board.get_winner()
     print("Winner is {}: {}".format(winner, board.colors[winner]))
 
+
 def self_play(iterations):
     tree = MCTS()
     board = Node.Node()
@@ -143,6 +148,7 @@ def self_play(iterations):
             tree.do_rollout(board)
         board = tree.choose(board)
         board.see_board()
+
 
 if __name__ == "__main__":
     play_game(200)

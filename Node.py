@@ -3,6 +3,7 @@
 import random
 import numpy as np
 
+
 class Node():
     """
     https://gist.github.com/qpwo/c538c6f73727e254fdc7fab81024f6e1
@@ -21,17 +22,19 @@ class Node():
         self.num_col = 7
         self.col_height = 6
         # 0 is red, 1 is yellow, -1 is black
-        self.current_state = -np.ones((self.col_height, self.num_col)).astype(int)
+        self.current_state = - \
+            np.ones((self.col_height, self.num_col)).astype(int)
         self.colors = {
-            -1: "\033[40m - \033[0m", # black
-            0: "\033[41m o \033[0m", # red
-            1: "\033[43m x \033[0m" # yellow
+            -1: "\033[40m - \033[0m",  # black
+            0: "\033[41m o \033[0m",  # red
+            1: "\033[43m x \033[0m"  # yellow
         }
         self.full_marker = -1
-        self.turn = 1 # either 0 or 1, starts off with 1 always
+        self.turn = 1  # either 0 or 1, starts off with 1 always
 
         # full_marker if completely filled, else first unfilled row index
-        self.unfilled_cols = np.ones(self.num_col).astype(int) * (self.col_height - 1)
+        self.unfilled_cols = np.ones(self.num_col).astype(
+            int) * (self.col_height - 1)
 
     def updated_unfilled_cols(self):
         """
@@ -59,7 +62,7 @@ class Node():
         Get marker to print for a certain player or empty space.
         """
         return self.colors[i]
-    
+
     def print_a_ndarray(self, map1, row_sep=" "):
         """
         Prints array.
@@ -67,12 +70,12 @@ class Node():
         """
         n, m = map1.shape
         vertical_padding = 2
-        m = m + vertical_padding # for vertical axis
+        m = m + vertical_padding  # for vertical axis
         fmt_str = "\n".join([row_sep.join(["{}"]*m)]*n)
-        column_labels = ['0','1','2','3','4','5','6']
-        row_labels = ['a','b','c','d','e','f']
+        column_labels = ['0', '1', '2', '3', '4', '5', '6']
+        row_labels = ['a', 'b', 'c', 'd', 'e', 'f']
 
-        map1 = np.pad(map1, [(0,0), (vertical_padding,0)])
+        map1 = np.pad(map1, [(0, 0), (vertical_padding, 0)])
 
         for i, label in enumerate(row_labels):
             map1[i, 1] = ' | '
@@ -88,7 +91,8 @@ class Node():
         Display Board. 'o' represents player 0, 'x' represents player 1, '-' represents an empty space.
         """
         display_board = self.current_state
-        coloured_board = np.vectorize(self.get_color_coded_background)(display_board)
+        coloured_board = np.vectorize(
+            self.get_color_coded_background)(display_board)
         self.print_a_ndarray(coloured_board, row_sep="")
         print()
 
@@ -142,10 +146,11 @@ class Node():
         Returns length of longest sequence of val in arr.
         Inspired by https://stackoverflow.com/a/38161867
         """
-        idx_pairs = np.where(np.diff(np.hstack(([False],arr==val,[False]))))[0].reshape(-1,2)
-        seq_lengths = np.diff(idx_pairs,axis=1)
+        idx_pairs = np.where(np.diff(np.hstack(([False], arr == val, [False]))))[
+            0].reshape(-1, 2)
+        seq_lengths = np.diff(idx_pairs, axis=1)
         if len(seq_lengths) > 0:
-            return max(np.diff(idx_pairs,axis=1))
+            return max(np.diff(idx_pairs, axis=1))
         else:
             return 0
 
@@ -204,7 +209,7 @@ class Node():
         ----------
         col : int
             The column number to play in, 0 <= col < self.col_num
-        
+
         Raises
         ------
         ValueError

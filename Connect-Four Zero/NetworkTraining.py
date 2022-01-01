@@ -10,7 +10,7 @@ import math
 from typing import List
 import numpy as np
 import tensorflow as tf
-
+import threading
 
 def alphazero(config: C4Config):
     storage = SharedStorage()
@@ -139,7 +139,7 @@ def add_exploration_noise(config: C4Config, node: C4Node):
 def train_network(config: C4Config, storage: SharedStorage,
                   replay_buffer: ReplayBuffer):
     network = Network()
-    optimizer = tf.train.MomentumOptimizer(config.learning_rate_schedule,
+    optimizer = tf.keras.optimizers.SGD(config.learning_rate_schedule,
                                            config.momentum)
     for i in range(config.training_steps):
         if i % config.checkpoint_interval == 0:
@@ -149,7 +149,7 @@ def train_network(config: C4Config, storage: SharedStorage,
     storage.save_network(config.training_steps, network)
 
 
-def update_weights(optimizer: tf.train.Optimizer, network: Network, batch,
+def update_weights(optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,
                    weight_decay: float):
     loss = 0
     for image, (target_value, target_policy) in batch:
@@ -166,8 +166,18 @@ def update_weights(optimizer: tf.train.Optimizer, network: Network, batch,
 
 
 def softmax_sample(d):
-    return 0, 0
+    """
+    d: list of tuples (visit_count, associated action)
+    Returns max visit count and action.
+    """
+    # could add in temperature parameter if wanted
+    return max(d,key=lambda item:item[0])
 
 
 def launch_job(f, *args):
-    f(*args)
+    x = threading.Thread(target=f, args=args)
+    x.start()
+
+if __name__ == "__main__":
+    config = C4Config()
+    alphazero(config)
