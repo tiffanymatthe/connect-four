@@ -10,9 +10,14 @@ class ReplayBuffer(object):
         self.buffer = []
 
     def save_game(self, game):
+        length = len(self.buffer)
         if len(self.buffer) > self.window_size:
             self.buffer.pop(0)
         self.buffer.append(game)
+        print("added game to buffer. previous length is {}".format(length))
+
+    def is_empty(self):
+        return len(self.buffer) == 0
 
     def sample_batch(self):
         # Sample uniformly across positions.

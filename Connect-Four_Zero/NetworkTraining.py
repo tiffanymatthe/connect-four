@@ -17,7 +17,7 @@ def alphazero(config: C4Config):
     replay_buffer = ReplayBuffer(config)
 
     # run_selfplay(config, storage, replay_buffer)
-    for i in range(config.num_actors):
+    for _ in range(config.num_actors):
         launch_job(run_selfplay, config, storage, replay_buffer)
 
     train_network(config, storage, replay_buffer)
@@ -147,6 +147,10 @@ def train_network(config: C4Config, storage: SharedStorage,
     for i in range(config.training_steps):
         if i % config.checkpoint_interval == 0:
             storage.save_network(i, network)
+        if replay_buffer.is_empty():
+            print("Empty buffer at iteration {}.".format(i))
+            continue
+        # print("Non-empty buffer at iteration {}.".format(i))
         batch = replay_buffer.sample_batch()
         update_weights(optimizer, network, batch, config.weight_decay)
     storage.save_network(config.training_steps, network)
