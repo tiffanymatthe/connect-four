@@ -16,6 +16,7 @@ def alphazero(config: C4Config):
     storage = SharedStorage()
     replay_buffer = ReplayBuffer(config)
 
+    # run_selfplay(config, storage, replay_buffer)
     for i in range(config.num_actors):
         launch_job(run_selfplay, config, storage, replay_buffer)
 
@@ -31,10 +32,13 @@ def alphazero(config: C4Config):
 # writing it to a shared replay buffer.
 def run_selfplay(config: C4Config, storage: SharedStorage,
                  replay_buffer: ReplayBuffer):
+    i = 0
     while True:
         network = storage.latest_network()
         game = play_game(config, network)
         replay_buffer.save_game(game)
+        i += 1
+        print("Game {}".format(i))
 
 
 # Each game is produced by starting at the initial board position, then
@@ -75,7 +79,7 @@ def run_mcts(config: C4Config, game: C4Game, network: Network):
 
 def select_action(config: C4Config, game: C4Game, root: C4Node):
     visit_counts = [(child.visit_count, action)
-                    for action, child in root.children.iteritems()]
+                    for action, child in root.children.items()]
     if len(game.history) < config.num_sampling_moves:
         _, action = softmax_sample(visit_counts)
     else:
@@ -86,7 +90,7 @@ def select_action(config: C4Config, game: C4Game, root: C4Node):
 # Select the child with the highest UCB score.
 def select_child(config: C4Config, node: C4Node):
     _, action, child = max((ucb_score(config, node, child), action, child)
-                           for action, child in node.children.iteritems())
+                           for action, child in node.children.items())
     return action, child
 
 
@@ -105,12 +109,11 @@ def ucb_score(config: C4Config, parent: C4Node, child: C4Node):
 # We use the neural network to obtain a value and policy prediction.
 def evaluate(node: C4Node, game: C4Game, network: Network):
     value, policy_logits = network.inference(game.make_image(-1))
-
     # Expand the node.
     node.to_play = game.to_play()
     policy = {a: math.exp(policy_logits[a]) for a in game.legal_actions()}
-    policy_sum = sum(policy.itervalues())
-    for action, p in policy.iteritems():
+    policy_sum = sum(policy.values())
+    for action, p in policy.items():
         node.children[action] = C4Node(p / policy_sum)
     return value
 

@@ -83,12 +83,12 @@ class C4Game(object):
                 "Invalid action {}. Column is full.".format(action))
         new_state = last_state.copy()
         new_state[unfilled_cols[action], action] = self.to_play()
-        self.history.append(action)
+        self.history.append(new_state)
 
     def store_search_statistics(self, root):
         # https://ai.stackexchange.com/questions/25451/how-does-alphazeros-mcts-work-when-starting-from-the-root-node
         sum_visits = sum(
-            child.visit_count for child in root.children.itervalues())
+            child.visit_count for child in root.children.values())
         self.child_visits.append([
             root.children[a].visit_count /
             sum_visits if a in root.children else 0
@@ -156,12 +156,13 @@ class C4Game(object):
         If the ith column is full, array[i] = -100.
         """
         cols = state.transpose().tolist()
-        unfilled_cols = np.zeros(self.num_col)
+        unfilled_cols = np.zeros(self.num_col).astype(int)
         for i, col in enumerate(cols):
             try:
                 unfilled_cols[i] = len(col) - 1 - col[::-1].index(-1)
             except ValueError:
                 unfilled_cols[i] = -100
+        return unfilled_cols
 
     def __is_col_full(self, unfilled_cols, col_num: int) -> bool:
         """Returns True if the column is full, False otherwise."""

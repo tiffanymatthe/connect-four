@@ -15,16 +15,23 @@ import tensorflow as tf
 
 class Network(object):
     def __init__(self) -> None:
+        # TODO: initialize model with uniform policy and value 0.5
         self.model = self.__get_model()
 
     def inference(self, image):
-        """Returns a tuple with value and policy: (-1, {})"""
-        return self.model.predict(image)
+        """
+        image is a numpy array of size 6 x 7 x 3
+
+        Returns a tuple with value and policy: (scalar, array of length 7)
+        """
+        tensor = tf.convert_to_tensor(image[None], dtype=tf.int32)
+        value, policy = self.model.predict(tensor)
+        return value[0,0], policy[0]
 
     def get_weights(self):
         # Returns the weights of this network as a list.
         # https://github.com/google/prettytensor/issues/6
-        return [v for v in tf.compat.v1.get_collection(tf.compat.v1.GraphKeys.TRAINABLE_VARIABLES) if v.name.endswith('weights:0')]
+        return self.model.trainable_weights
 
     @staticmethod
     def get_common_layers(inputs):
@@ -80,12 +87,13 @@ class Network(object):
     @staticmethod
     def compile_model(width, height):
         # 3 because we will 3 channels (red tokens, yellow tokens, board state)
+        # TODO: find proper loss function, I just took some random one
         inputs = Input(shape=(height, width, 3))
         value_branch = Network.get_value_branch(inputs)
         policy_branch = Network.get_policy_branch(inputs)
 
         model = Model(inputs=inputs, outputs=[value_branch, policy_branch])
-
+        model.compile(loss='categorical_crossentropy', optimizer='sgd')
         return model
 
     def __get_model(self):
