@@ -1,11 +1,9 @@
 #!/usr/bin/env python
-import math
-import Node
 import numpy as np
 import itertools
 
 
-class DataGenerator:
+class DataGenerator(object):
     def __init__(self):
         pass
 

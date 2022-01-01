@@ -3,7 +3,7 @@ import numpy as np
 from DataGenerator import DataGenerator
 
 
-class C4Game():
+class C4Game(object):
     def __init__(self, history=None) -> None:
         self.history = history or []
         self.child_visits = []

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
-import Network
+from Network import Network
 
 
-class SharedStorage():
+class SharedStorage(object):
     def __init__(self):
         self._networks = {}
 
@@ -17,4 +17,5 @@ class SharedStorage():
 
 
 def make_uniform_network() -> Network:
-    pass
+    # TODO: should have weights which give uniform policy and value 0.5
+    return Network()
