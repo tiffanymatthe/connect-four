@@ -6,7 +6,9 @@ from collections import namedtuple
 
 import numpy as np
 import math
-import Node
+import C4Game
+import C4Config
+import C4Node
 
 class Alpha_beta:
 
@@ -46,34 +48,31 @@ class Alpha_beta:
 
 
     #node is the current node in the game
-    def alpha_beta_pruning(state, node, d=4, cutoff_test=None, eval_fn=None):
+    def alpha_beta_pruning(state, game, d=4, cutoff_test=None, eval_fn=None):
         """Search game to determine best action; use alpha-beta pruning.
         This version cuts off search and uses an evaluation function."""
 
-        player = 0 #how to get the current player's playing ID????
+        
+        """
+        To determine which player's turn it is, we will look at the unfilled columns.
+        If there are odd filled columns then it is player 2's turn otherwise 1.
+        Player 1 is 1 and player 2 is 0 as defined in C4Game.py
+        """
+        player = game.to_play()
 
-        def get_reward(self, node, child):
-            """
-            Need to modify this function but this returns the reward value 
-            associated with a particular move. 
-            """
-            invert_reward = True
-            while True:
-                if node.is_terminal():
-                    reward = node.reward()
-                    return 1 - reward if invert_reward else reward
-                node = child
-                invert_reward = not invert_reward
-            print("out of the while loop")
 
         # Functions used by alpha_beta
         def max_value(state, alpha, beta, depth):
             if cutoff_test(state, depth):
                 return eval_fn(state)
             v = -np.inf
-            for child in node.find_children():
-                #result in this case represents the final outcome of choosing a specified move
-                result = self.get_reward(node, child)
+            for a in game.legal_actions():
+                #Previously was the following line where the game.result returned 
+                #the utility or the reward values of the current game state
+                # v = max(v, min_value(game.result(state, a), alpha, beta, depth + 1))
+                game.apply(a)
+                toPlayResult = game.to_play()
+                result = game.terminal_value(toPlayResult)
                 v = max(v, min_value(result, alpha, beta, depth + 1))
                 if v >= beta:
                     return v
@@ -84,8 +83,11 @@ class Alpha_beta:
             if cutoff_test(state, depth):
                 return eval_fn(state)
             v = np.inf
-            for child in node.find_children():
-                result = self.get_reward(node, child)
+
+            for a in game.legal_actions():
+                game.apply(a)
+                toPlayResult = game.to_play()
+                result = game.terminal_value(toPlayResult)
                 v = min(v, max_value(result, alpha, beta, depth + 1))
                 if v <= alpha:
                     return v
@@ -94,17 +96,19 @@ class Alpha_beta:
 
         # Body of alpha_beta_cutoff_search starts here:
         # The default test cuts off at depth d or at a terminal state
-        cutoff_test = (cutoff_test or (lambda state, depth: depth > d or node.is_terminal()))
-        eval_fn = eval_fn or (lambda state: self.evaluateContent(node))
+        cutoff_test = (cutoff_test or (lambda state, depth: depth > d or game.terminal()))
+        eval_fn = eval_fn or (lambda state: game.terminal_value(player))
         best_score = -np.inf
         beta = np.inf
         best_action = None
-        for child in node.find_children():
-            result = self.get_reward(node, child)
-            v = min_value(result, best_score, beta, 1)
-            if v > best_score:
-                best_score = v
-                best_action = a
+        for a in game.legal_actions():
+            game.apply(a)
+            toPlayResult = game.to_play()
+            result = game.terminal_value(toPlayResult)
+        v = min_value(result, best_score, beta, 1)
+        if v > best_score:
+            best_score = v
+            best_action = a
         return best_action
 
 
@@ -133,6 +137,7 @@ def get_player_move(board):
 
 def play_game():
     tree = Alpha_beta()
+    game = C4Game()
     board = Node.Node()
     board.see_board()
     while True:
