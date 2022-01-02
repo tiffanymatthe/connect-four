@@ -71,7 +71,6 @@ def run_mcts(config: C4Config, game: C4Game, network: Network):
         action, node = select_child(config, node)
         scratch_game.apply(action)
         search_path.append(node)
-
         value = evaluate(node, scratch_game, network)
         backpropagate(search_path, value, scratch_game.to_play())
     return select_action(config, game, root), root
@@ -148,9 +147,9 @@ def train_network(config: C4Config, storage: SharedStorage,
         if i % config.checkpoint_interval == 0:
             storage.save_network(i, network)
         if replay_buffer.is_empty():
-            print("Empty buffer at iteration {}.".format(i))
+            # print("Empty buffer at iteration {}.".format(i))
             continue
-        # print("Non-empty buffer at iteration {}.".format(i))
+        print("Non-empty buffer at iteration {}.".format(i))
         batch = replay_buffer.sample_batch()
         update_weights(optimizer, network, batch, config.weight_decay)
     storage.save_network(config.training_steps, network)
