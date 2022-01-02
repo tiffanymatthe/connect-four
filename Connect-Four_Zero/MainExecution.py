@@ -96,9 +96,9 @@ def print_summary():
     network.print_model_summary()
 
 if __name__ == "__main__":
-    print_summary()
+    # print_summary()
     # profile_inference()
-    # train_network()
+    train_network()
     # profile_game()
     # test_shared_storage()
     # profile_multiprocessing()
