@@ -94,7 +94,11 @@ class Network(object):
         policy_branch = Network.get_policy_branch(inputs)
 
         model = Model(inputs=inputs, outputs=[value_branch, policy_branch])
-        model.compile(loss='categorical_crossentropy', optimizer='sgd')
+        losses = {
+            "value_output": "mse", 
+            "probability_output":"categorical_crossentropy"
+        }
+        model.compile(optimizer='sgd', loss=losses)
         return model
 
     def __get_model(self):
