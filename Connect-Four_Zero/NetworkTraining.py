@@ -181,15 +181,20 @@ class NetworkTraining(object):
     def update_weights(optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,
                        weight_decay: float):
         loss = 0
+        mse = tf.keras.losses.MeanSquaredError(reduction="auto")
         for image, (target_value, target_policy) in batch:
             value, policy_logits = network.inference(image)
+            target_value = [target_value]
             loss += (
-                tf.losses.mean_squared_error(value, target_value) +
+                mse(value, target_value).numpy() +
                 tf.nn.softmax_cross_entropy_with_logits(
                     logits=policy_logits, labels=target_policy))
 
         for weights in network.get_weights():
             loss += weight_decay * tf.nn.l2_loss(weights)
+
+        print("LOSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
+        print(loss)
 
         optimizer.minimize(loss)
 
@@ -206,3 +211,9 @@ class NetworkTraining(object):
     def launch_job(f, *args):
         x = Process(target=f, args=args)
         x.start()
+
+if __name__ == "__main__":
+    mse = tf.keras.losses.MeanSquaredError(reduction="auto")
+    target_value = [0.5]
+    value = tf.constant(-0.12986256) # needs to be an array
+    print(mse(value, target_value).numpy())
