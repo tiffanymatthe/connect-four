@@ -6,24 +6,24 @@ from collections import namedtuple
 
 import numpy as np
 import math
-import C4Game
-import C4Config
-import C4Node
+from MCTS import MCTS
+from Node import Node
+
 
 class Alpha_beta:
 
     def __init__(self):
-        self.evaluationTable = np.array([[3, 4, 5, 7, 5, 4, 3], 
-                            [4, 6, 8, 10, 8, 6, 4],
-                            [5, 8, 11, 13, 11, 8, 5], 
-                            [5, 8, 11, 13, 11, 8, 5],
-                            [4, 6, 8, 10, 8, 6, 4],
-                            [3, 4, 5, 7, 5, 4, 3]])
+        self.evaluationTable = np.array([[3, 4, 5, 7, 5, 4, 3],
+                                         [4, 6, 8, 10, 8, 6, 4],
+                                         [5, 8, 11, 13, 11, 8, 5],
+                                         [5, 8, 11, 13, 11, 8, 5],
+                                         [4, 6, 8, 10, 8, 6, 4],
+                                         [3, 4, 5, 7, 5, 4, 3]])
         self.rows = 6
         self.cols = 7
 
     # here is where the evaluation table is called
-    def evaluateContent(node):
+    def evaluateContent(self, node):
         """
         The numbers in the table above represent how many four conncted positions there
         can be including that space. For example, the first entry 3 represents the connected
@@ -32,7 +32,7 @@ class Alpha_beta:
 
         This function will return value < 0 if the player with marker 'X' is likely to win, 
         value = 0 in case of a draw, and value > 0 if player with marker 'O' is likely to win.
-        
+
         utility value below is 138 since sum of all entries in the table above is 276 = 2 x 138
         """
 
@@ -46,13 +46,12 @@ class Alpha_beta:
                     sum -= node.current_state[i][j]
         return utility + sum
 
+    # node is the current node in the game
 
-    #node is the current node in the game
-    def alpha_beta_pruning(state, game, d=4, cutoff_test=None, eval_fn=None):
+    def alpha_beta_pruning(self, state, game, d=4, cutoff_test=None, eval_fn=None):
         """Search game to determine best action; use alpha-beta pruning.
         This version cuts off search and uses an evaluation function."""
 
-        
         """
         To determine which player's turn it is, we will look at the unfilled columns.
         If there are odd filled columns then it is player 2's turn otherwise 1.
@@ -60,15 +59,15 @@ class Alpha_beta:
         """
         player = game.to_play()
 
-
         # Functions used by alpha_beta
+
         def max_value(state, alpha, beta, depth):
             if cutoff_test(state, depth):
                 return eval_fn(state)
             v = -np.inf
             for a in game.legal_actions():
-                #Previously was the following line where the game.result returned 
-                #the utility or the reward values of the current game state
+                # Previously was the following line where the game.result returned
+                # the utility or the reward values of the current game state
                 # v = max(v, min_value(game.result(state, a), alpha, beta, depth + 1))
                 game.apply(a)
                 toPlayResult = game.to_play()
@@ -96,7 +95,8 @@ class Alpha_beta:
 
         # Body of alpha_beta_cutoff_search starts here:
         # The default test cuts off at depth d or at a terminal state
-        cutoff_test = (cutoff_test or (lambda state, depth: depth > d or game.terminal()))
+        cutoff_test = (cutoff_test or (
+            lambda state, depth: depth > d or game.terminal()))
         eval_fn = eval_fn or (lambda state: game.terminal_value(player))
         best_score = -np.inf
         beta = np.inf
@@ -118,6 +118,7 @@ def get_int_input(message):
         user_input = input("Not an int, try again: ")
     return int(user_input)
 
+
 def get_player_move(board):
     if (board.is_draw()):
         raise ValueError("DRAW")
@@ -135,23 +136,28 @@ def get_player_move(board):
 
     return board
 
-def play_game():
-    tree = Alpha_beta()
-    game = C4Game()
-    board = Node.Node()
+
+def play_against_MCTS(iterations):
+    ab_tree = Alpha_beta()
+    mcts_tree = MCTS()
+    board = Node()
     board.see_board()
     while True:
-        board = get_player_move(board)
+        for _ in range(iterations):
+            mcts_tree.do_rollout(board)
+        board = mcts_tree.choose(board)
         board.see_board()
         if (board.is_terminal()):
             break
-        board = tree.alpha_beta_pruning(board, board)
+        # this needs to return a Node, same Node as what MCTS returns.
+        board = ab_tree.alpha_beta_pruning(board, board)
         board.see_board()
         if (board.is_terminal()):
             break
 
     winner = board.get_winner()
     print("Winner is {}: {}".format(winner, board.colors[winner]))
+    print("1 is MCTS, 0 is AlphaBeta")
 
 if __name__ == "__main__":
-    play_game()
+    play_against_MCTS(100)
