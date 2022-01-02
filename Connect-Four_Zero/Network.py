@@ -87,14 +87,14 @@ class Network(object):
 
     @staticmethod
     def compile_model(width, height):
-        # 3 because we will 3 channels (red tokens, yellow tokens, board state)
+        # 3 because we will have 3 channels (red tokens, yellow tokens, board state)
         # TODO: find proper loss function, I just took some random one
         inputs = Input(shape=(height, width, 3))
         value_branch = Network.get_value_branch(inputs)
         policy_branch = Network.get_policy_branch(inputs)
 
         model = Model(inputs=inputs, outputs=[value_branch, policy_branch])
-        model.compile(loss='categorical_crossentropy', optimizer='sgd')
+        model.compile(loss={'value_output':'mse', 'policy_output':'categorical_crossentropy'}, optimizer='sgd')
         return model
 
     def __get_model(self):

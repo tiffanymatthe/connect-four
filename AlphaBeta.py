@@ -57,7 +57,9 @@ class Alpha_beta:
         If there are odd filled columns then it is player 2's turn otherwise 1.
         Player 1 is 1 and player 2 is 0 as defined in C4Game.py
         """
+        root = C4Node(0)
         player = game.to_play()
+        scratch_game = game.clone()
 
         # Functions used by alpha_beta
 
@@ -65,13 +67,13 @@ class Alpha_beta:
             if cutoff_test(state, depth):
                 return eval_fn(state)
             v = -np.inf
-            for a in game.legal_actions():
+            for a in scratch_game.legal_actions():
                 # Previously was the following line where the game.result returned
                 # the utility or the reward values of the current game state
                 # v = max(v, min_value(game.result(state, a), alpha, beta, depth + 1))
-                game.apply(a)
-                toPlayResult = game.to_play()
-                result = game.terminal_value(toPlayResult)
+                scratch_game.apply(a)
+                currPlayer = game.to_play()
+                result = game.terminal_value(currPlayer)
                 v = max(v, min_value(result, alpha, beta, depth + 1))
                 if v >= beta:
                     return v
@@ -85,8 +87,8 @@ class Alpha_beta:
 
             for a in game.legal_actions():
                 game.apply(a)
-                toPlayResult = game.to_play()
-                result = game.terminal_value(toPlayResult)
+                currPlayer = game.to_play()
+                result = game.terminal_value(currPlayer)
                 v = min(v, max_value(result, alpha, beta, depth + 1))
                 if v <= alpha:
                     return v
