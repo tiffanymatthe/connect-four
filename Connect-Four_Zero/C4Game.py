@@ -24,6 +24,7 @@ class C4Game(object):
         if history is None:
             self.history.append(
                 self.empty * np.ones((self.col_height, self.num_col)).astype(int))
+            self.child_visits.append(np.zeros(self.num_actions)) # need to check
 
         # so for history[0], this corresponds to a board where player 1 is to play.
 
@@ -102,7 +103,7 @@ class C4Game(object):
 
     def make_target(self, state_index: int):
         return (self.terminal_value(state_index % 2),
-                self.child_visits[state_index])
+            self.child_visits[state_index])
 
     def to_play(self, state_index=None):
         """

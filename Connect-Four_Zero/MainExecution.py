@@ -30,7 +30,7 @@ def profile_game():
     stats.sort_stats(pstats.SortKey.TIME)
     # Now you have two options, either print the data or save it as a file
     # stats.print_stats() # Print The Stats
-    stats.dump_stats("game_profile.prof") # Saves the data in a file, can me used to see the data visually
+    stats.dump_stats("profiles/game_profile.prof") # Saves the data in a file, can me used to see the data visually
     # to view data, use pip install snakeviz, then in terminal type snakeviz game_profile.prof.
 
 def profile_inference():
@@ -41,7 +41,7 @@ def profile_inference():
         value, policy = network.inference(image)
     stats = pstats.Stats(pr)
     stats.sort_stats(pstats.SortKey.TIME)
-    stats.dump_stats("inference_profile.prof")
+    stats.dump_stats("profiles/inference_profile.prof")
     print(value)
     print(policy)
 
@@ -85,7 +85,7 @@ def profile_multiprocessing():
         test_shared_storage()
     stats = pstats.Stats(pr)
     stats.sort_stats(pstats.SortKey.TIME)
-    stats.dump_stats("multiprocessing_profile.prof")
+    stats.dump_stats("profiles/multiprocessing_profile.prof")
 
 def train_network():
     config = C4Config()
