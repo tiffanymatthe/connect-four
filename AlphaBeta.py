@@ -159,5 +159,6 @@ def play_against_MCTS(iterations):
     print("Winner is {}: {}".format(winner, board.colors[winner]))
     print("1 is MCTS, 0 is AlphaBeta")
 
+
 if __name__ == "__main__":
     play_against_MCTS(100)
