@@ -15,6 +15,9 @@ class SharedStorage(object):
     def save_network(self, step: int, network: Network):
         self._networks[step] = network
 
+    def get_num_networks(self):
+        return len(self._networks)
+
 
 def make_uniform_network() -> Network:
     # TODO: should have weights which give uniform policy and value 0.5

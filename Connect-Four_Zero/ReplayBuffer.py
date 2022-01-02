@@ -19,6 +19,9 @@ class ReplayBuffer(object):
     def is_empty(self):
         return len(self.buffer) == 0
 
+    def get_buffer_size(self):
+        return len(self.buffer)
+
     def sample_batch(self):
         # Sample uniformly across positions.
         move_sum = float(sum(len(g.history) for g in self.buffer))
