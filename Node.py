@@ -278,9 +278,20 @@ class Node():
         self.see_board()
         raise RuntimeError(f"board has unknown winner type")
 
-    def compute_utility(self, move:int):
 
-        
+    def compute_utility(self):
+        """
+        This method computes the current utility of the board state. It returns 
+        1 if the current player has won, 0 if the opponent won, and -1 if the board
+        is a tie. The difference between this method and reward is that this will return 
+        the utility even if the node is not terminal and not throw an error.
+        """
+        if self.get_winner() == self.turn:
+            return 1
+        if self.get_winner() == (not self.turn):
+            return 0
+        if self.get_winner() == -1:
+            return 0.5
 
     def to_play(self):
         """
@@ -291,3 +302,8 @@ class Node():
             return 1
         else:
             return 0
+    
+    def result(node, col:int):
+        newNode = self.move(col)
+        return newNode, compute_utility()
+    

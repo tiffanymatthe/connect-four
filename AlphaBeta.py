@@ -66,12 +66,12 @@ class Alpha_beta:
             if cutoff_test(node, depth):
                 return eval_fn(node)
             v = -np.inf
-            scratch_game = node.get_copy()
             for a in scratch_game.unfilled_cols:
                 # Previously was the following line where the game.result returned
                 # the utility or the reward values of the current game state
                 # v = max(v, min_value(game.result(state, a), alpha, beta, depth + 1))
-                move = node.move()
+                
+                move = scratch_game.move()
                 scratch_game.updated_unfilled_cols()
                 currPlayer = scratch_game.to_play()
                 result = game.terminal_value(currPlayer)
