@@ -5,7 +5,7 @@ from DataGenerator import DataGenerator
 
 class C4Game(object):
     def __init__(self, history=None) -> None:
-        self.history = history or []
+        self.history = history or [] # index of history should correspond to the player to play.
         self.child_visits = []
         self.num_actions = 7
         self.num_col = 7
@@ -13,7 +13,7 @@ class C4Game(object):
 
         self.__winner = -100
 
-        self.player1 = 1
+        self.player1 = 1 # first player
         self.player2 = 0
         self.empty = -1
         self.win_num = 4  # need 4 tokens in a line to win
@@ -102,9 +102,11 @@ class C4Game(object):
 
     def to_play(self):
         """
-        This method returns the player id of which player's turn it is 
+        This method returns the player id of which player's turn it is
+        self.history is initialized with an empty board, so at index 0, should return 1 (player 1 token).
+        TODO: check
         """
-        return len(self.history) % 2
+        return (len(self.history) + 1) % 2
 
     def __find_longest_seq(self, arr, val) -> int:
         """

@@ -11,10 +11,8 @@ from timeit import default_timer as timer
 import cProfile
 import pstats
 
-from multiprocessing import Process, Manager
+from multiprocessing import Process
 from multiprocessing.managers import BaseManager
-
-storage_global = SharedStorage()
 
 def time_game():
     network = Network()
@@ -54,22 +52,18 @@ def play_and_save(config, replay_buffer: ReplayBuffer, storage: SharedStorage):
         game = NetworkTraining.play_game(config, network)
         replay_buffer.save_game(game)
 
-def play_and_save_global(config, replay_buffer: ReplayBuffer):
-    for _ in range(2):
-        network = storage_global.latest_network()
-        print("Num of networks: {}".format(storage_global.get_num_networks()))
-        game = NetworkTraining.play_game(config, network)
-        replay_buffer.save_game(game)
-
-def test_shared_storage():
-    config = C4Config()
-    BaseManager.register('ReplayBuffer', ReplayBuffer) # process writes to this
-    BaseManager.register('SharedStorage', SharedStorage) # process reads from this, maybe inefficient
+def get_buffer_storage_from_base_manager(config):
+    BaseManager.register('ReplayBuffer', ReplayBuffer)
+    BaseManager.register('SharedStorage', SharedStorage)
     manager = BaseManager()
     manager.start()
     replay_buffer = manager.ReplayBuffer(config)    
     storage = manager.SharedStorage()
+    return replay_buffer, storage
 
+def test_shared_storage():
+    config = C4Config()
+    replay_buffer, storage = get_buffer_storage_from_base_manager(config)
     process_list = []
     for _ in range(5):
         p = Process(target=play_and_save, args=(config, replay_buffer, storage))
@@ -86,35 +80,12 @@ def test_shared_storage():
     print(replay_buffer.get_buffer_size())
     print(storage.get_num_networks())
 
-def test_shared_storage_global_storage():
-    config = C4Config()
-    BaseManager.register('ReplayBuffer', ReplayBuffer) # process writes to this
-    manager = BaseManager()
-    manager.start()
-    replay_buffer = manager.ReplayBuffer(config)
-
-    process_list = []
-    for _ in range(5):
-        p = Process(target=play_and_save_global, args=(config, replay_buffer))
-        p.start()
-        process_list.append(p)
-
-    for i in range(5):
-        net = Network()
-        storage_global.save_network(i, net)
-
-    for process in process_list:
-        process.join()
-
-    print(replay_buffer.get_buffer_size())
-    print(storage_global.get_num_networks())
-
 def profile_multiprocessing():
     with cProfile.Profile() as pr:
-        test_shared_storage_global_storage()
+        test_shared_storage()
     stats = pstats.Stats(pr)
     stats.sort_stats(pstats.SortKey.TIME)
-    stats.dump_stats("multiprocessing_global_profile.prof")
+    stats.dump_stats("multiprocessing_profile.prof")
 
 def train_network():
     config = C4Config()
@@ -122,7 +93,7 @@ def train_network():
 
 if __name__ == "__main__":
     # profile_inference()
-    # train_network()
+    train_network()
     # profile_game()
     # test_shared_storage()
-    profile_multiprocessing()
+    # profile_multiprocessing()

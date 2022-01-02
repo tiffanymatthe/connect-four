@@ -10,17 +10,16 @@ import math
 from typing import List
 import numpy as np
 import tensorflow as tf
-import threading
+from multiprocessing import Process
+from multiprocessing.managers import BaseManager
 
 
 class NetworkTraining(object):
 
     @staticmethod
     def alphazero(config: C4Config):
-        storage = SharedStorage()
-        replay_buffer = ReplayBuffer(config)
+        replay_buffer, storage = NetworkTraining.get_buffer_storage_from_base_manager(config)
 
-        # run_selfplay(config, storage, replay_buffer)
         for _ in range(config.num_actors):
             NetworkTraining.launch_job(
                 NetworkTraining.run_selfplay, config, storage, replay_buffer)
@@ -28,6 +27,16 @@ class NetworkTraining(object):
         NetworkTraining.train_network(config, storage, replay_buffer)
 
         return storage.latest_network()
+
+    @staticmethod
+    def get_buffer_storage_from_base_manager(config):
+        BaseManager.register('ReplayBuffer', ReplayBuffer)
+        BaseManager.register('SharedStorage', SharedStorage)
+        manager = BaseManager()
+        manager.start()
+        replay_buffer = manager.ReplayBuffer(config)    
+        storage = manager.SharedStorage()
+        return replay_buffer, storage
 
     # ----------------SELF PLAY----------------------------------------
 
@@ -161,9 +170,8 @@ class NetworkTraining(object):
             if i % config.checkpoint_interval == 0:
                 storage.save_network(i, network)
             if replay_buffer.is_empty():
-                # print("Empty buffer at iteration {}.".format(i))
                 continue
-            print("Non-empty buffer at iteration {}.".format(i))
+            # print("Non-empty buffer at iteration {}.".format(i))
             batch = replay_buffer.sample_batch()
             NetworkTraining.update_weights(
                 optimizer, network, batch, config.weight_decay)
@@ -196,5 +204,5 @@ class NetworkTraining(object):
 
     @staticmethod
     def launch_job(f, *args):
-        x = threading.Thread(target=f, args=args)
+        x = Process(target=f, args=args)
         x.start()
