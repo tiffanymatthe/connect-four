@@ -1,11 +1,14 @@
 #!/usr/bin/env python
+from os import stat
+from typing import Optional
 import numpy as np
 from DataGenerator import DataGenerator
 
 
 class C4Game(object):
     def __init__(self, history=None) -> None:
-        self.history = history or [] # index of history should correspond to the player to play.
+        # index of history should correspond to the player to play.
+        self.history = history or []
         self.child_visits = []
         self.num_actions = 7
         self.num_col = 7
@@ -13,7 +16,7 @@ class C4Game(object):
 
         self.__winner = -100
 
-        self.player1 = 1 # first player
+        self.player1 = 1  # first player
         self.player2 = 0
         self.empty = -1
         self.win_num = 4  # need 4 tokens in a line to win
@@ -21,6 +24,8 @@ class C4Game(object):
         if history is None:
             self.history.append(
                 self.empty * np.ones((self.col_height, self.num_col)).astype(int))
+
+        # so for history[0], this corresponds to a board where player 1 is to play.
 
     def terminal(self) -> bool:
         """Returns True if the game has reached a terminal state (win, loss, draw). False otherwise."""
@@ -51,7 +56,6 @@ class C4Game(object):
             self.__winner = self.player2
 
         return p1_win or p2_win
-
 
     def terminal_value(self, to_play):
         """Returns 1 if player to_play wins, 0 if tied, -1 if otherwise. Game needs to be terminal."""
@@ -94,19 +98,23 @@ class C4Game(object):
         ])
 
     def make_image(self, state_index: int):
-        return DataGenerator.get_nn_input(self.history[state_index], self.to_play())
+        return DataGenerator.get_nn_input(self.history[state_index], self.to_play(state_index))
 
     def make_target(self, state_index: int):
         return (self.terminal_value(state_index % 2),
                 self.child_visits[state_index])
 
-    def to_play(self):
+    def to_play(self, state_index=None):
         """
         This method returns the player id of which player's turn it is
         self.history is initialized with an empty board, so at index 0, should return 1 (player 1 token).
         TODO: check
         """
-        return (len(self.history) + 1) % 2
+        if state_index is not None:
+            if state_index == -1:
+                return len(self.history) % 2
+            return (state_index + 1) % 2
+        return len(self.history) % 2
 
     def __find_longest_seq(self, arr, val) -> int:
         """
