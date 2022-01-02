@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import multiprocessing
 from Network import Network
 from NetworkTraining import NetworkTraining
 from C4Config import C4Config
@@ -9,6 +10,10 @@ from ReplayBuffer import ReplayBuffer
 from timeit import default_timer as timer
 import cProfile
 import pstats
+
+import threading
+from multiprocessing import Process, Manager
+from multiprocessing.managers import BaseManager
 
 def time_game():
     network = Network()
@@ -41,11 +46,36 @@ def profile_inference():
     print(value)
     print(policy)
 
+def play_and_save(config, replay_buffer: ReplayBuffer, network):
+    game = NetworkTraining.play_game(config, network)
+    replay_buffer.save_game(game)
+
+def test_shared_storage():
+    config = C4Config()
+    BaseManager.register('ReplayBuffer', ReplayBuffer)
+    manager = BaseManager()
+    manager.start()
+    replay_buffer = manager.ReplayBuffer(config)    
+    storage = SharedStorage()
+    network = storage.latest_network()
+
+    process_list = []
+    for _ in range(5):
+        p = Process(target=play_and_save, args=(config, replay_buffer, network))
+        p.start()
+        process_list.append(p)
+
+    for process in process_list:
+        process.join()
+
+    print(len(replay_buffer.buffer))
+
 def train_network():
     config = C4Config()
     NetworkTraining.alphazero(config)
 
 if __name__ == "__main__":
     # profile_inference()
-    train_network()
+    # train_network()
     # profile_game()
+    test_shared_storage()
