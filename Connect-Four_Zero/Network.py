@@ -23,9 +23,10 @@ class Network(object):
         image is a numpy array of size 6 x 7 x 3
 
         Returns a tuple with value and policy: (scalar, array of length 7)
+        https://github.com/tensorflow/tensorflow/issues/40261#issuecomment-647191650
         """
         tensor = tf.convert_to_tensor(image[None], dtype=tf.int32)
-        value, policy = self.model.predict(tensor)
+        value, policy = self.model(tensor, training=False)
         return value[0,0], policy[0]
 
     def get_weights(self):

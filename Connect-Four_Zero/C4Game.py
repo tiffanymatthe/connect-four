@@ -18,7 +18,6 @@ class C4Game(object):
         self.empty = -1
         self.win_num = 4  # need 4 tokens in a line to win
 
-        # TODO: check if initial game state should be part of history or not. should be ok
         if history is None:
             self.history.append(
                 self.empty * np.ones((self.col_height, self.num_col)).astype(int))
@@ -86,7 +85,6 @@ class C4Game(object):
         self.history.append(new_state)
 
     def store_search_statistics(self, root):
-        # https://ai.stackexchange.com/questions/25451/how-does-alphazeros-mcts-work-when-starting-from-the-root-node
         sum_visits = sum(
             child.visit_count for child in root.children.values())
         self.child_visits.append([
@@ -96,7 +94,6 @@ class C4Game(object):
         ])
 
     def make_image(self, state_index: int):
-        # TODO: check if state_index should include initial state (index 0)
         return DataGenerator.get_nn_input(self.history[state_index], self.to_play())
 
     def make_target(self, state_index: int):

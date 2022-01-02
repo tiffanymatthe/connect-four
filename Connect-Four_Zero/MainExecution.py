@@ -48,3 +48,4 @@ def train_network():
 if __name__ == "__main__":
     # profile_inference()
     train_network()
+    # profile_game()
