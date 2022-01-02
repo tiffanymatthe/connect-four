@@ -48,7 +48,7 @@ class Alpha_beta:
 
     # node is the current node in the game
 
-    def alpha_beta_pruning(self, state, game, d=4, cutoff_test=None, eval_fn=None):
+    def alpha_beta_pruning(self, node, d=4, cutoff_test=None, eval_fn=None):
         """Search game to determine best action; use alpha-beta pruning.
         This version cuts off search and uses an evaluation function."""
 
@@ -57,22 +57,23 @@ class Alpha_beta:
         If there are odd filled columns then it is player 2's turn otherwise 1.
         Player 1 is 1 and player 2 is 0 as defined in C4Game.py
         """
-        root = C4Node(0)
-        player = game.to_play()
-        scratch_game = game.clone()
+        unfilledCols = node.unfilled_cols
+        player = node.to_play()
 
         # Functions used by alpha_beta
 
-        def max_value(state, alpha, beta, depth):
-            if cutoff_test(state, depth):
-                return eval_fn(state)
+        def max_value(node, alpha, beta, depth):
+            if cutoff_test(node, depth):
+                return eval_fn(node)
             v = -np.inf
-            for a in scratch_game.legal_actions():
+            scratch_game = node.get_copy()
+            for a in scratch_game.unfilled_cols:
                 # Previously was the following line where the game.result returned
                 # the utility or the reward values of the current game state
                 # v = max(v, min_value(game.result(state, a), alpha, beta, depth + 1))
-                scratch_game.apply(a)
-                currPlayer = game.to_play()
+                move = node.move()
+                scratch_game.updated_unfilled_cols()
+                currPlayer = scratch_game.to_play()
                 result = game.terminal_value(currPlayer)
                 v = max(v, min_value(result, alpha, beta, depth + 1))
                 if v >= beta:

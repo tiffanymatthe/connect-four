@@ -277,3 +277,17 @@ class Node():
         # The winner is neither True, False, nor -1
         self.see_board()
         raise RuntimeError(f"board has unknown winner type")
+
+    def compute_utility(self, move:int):
+
+        
+
+    def to_play(self):
+        """
+        This method returns the value representing which player's turn it is. It
+        returns 1 if it's player 1 turn or 0 if it's player 2's turn
+        """
+        if (self.unfilled_cols % 2):
+            return 1
+        else:
+            return 0
