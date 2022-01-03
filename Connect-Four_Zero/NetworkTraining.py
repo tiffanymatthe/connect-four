@@ -15,6 +15,7 @@ import numpy as np
 import tensorflow as tf
 from multiprocessing import Process
 from multiprocessing.managers import BaseManager
+import random
 
 class NetworkTraining(object):
 
@@ -29,7 +30,6 @@ class NetworkTraining(object):
             p = NetworkTraining.launch_job(
                 NetworkTraining.run_selfplay, config, storage, replay_buffer)
             processes.append(p)
-            print("THE P VALUEEEE {}".format(p))
 
         NetworkTraining.train_network(config, storage, replay_buffer)
 
@@ -103,7 +103,7 @@ class NetworkTraining(object):
             scratch_game = game.clone()
             search_path = [node]
         
-        print("Length of the search path after the for loop {}".format(len(search_path)))
+        # print("Length of the search path after the for loop {}".format(len(search_path)))
 
         while node.expanded():
             action, node = NetworkTraining.select_child(config, node)
@@ -113,7 +113,7 @@ class NetworkTraining(object):
             value = NetworkTraining.evaluate(node, scratch_game, network)
             NetworkTraining.backpropagate(
                 search_path, value, scratch_game.to_play())
-        print("Length of the search path after node expansion {}".format(len(search_path)))
+        # print("Length of the search path after node expansion {}".format(len(search_path)))
         return NetworkTraining.select_action(config, game, root), root
 
     @staticmethod
@@ -131,11 +131,16 @@ class NetworkTraining(object):
 
     @staticmethod
     def select_child(config: C4Config, node: C4Node):
-        _, action, child = max((NetworkTraining.ucb_score(config, node, child), action, child)
+        ucb_score, action, child = max((NetworkTraining.ucb_score(config, node, child), action, child)
                                for action, child in node.children.items())
-        print("OUTPUT of max function {}".format(max((NetworkTraining.ucb_score(config, node, child), action, child)
-                               for action, child in node.children.items())))
-        return action, child
+        children = []
+        for action, child in node.children.items():
+            if (NetworkTraining.ucb_score(config, node, child) == ucb_score):
+                children.append((action, child))
+    
+
+        # print("OUTPUT of max function {}".format(random.choices(children)))
+        return random.choices(children)[0]
 
     # The score for a node is based on its value, plus an exploration bonus based on
     # the prior.
@@ -240,9 +245,9 @@ class NetworkTraining(object):
         """
         # could add in temperature parameter if wanted
         
-        print("input {}".format(d))
+        # print("input {}".format(d))
         ret_val = max(d, key=lambda item: item[0])
-        print("return value {}".format(ret_val))
+        # print("return value {}".format(ret_val))
         # e_x = np.exp(d[] - np.max(d))
         # ret_val = e_x / e_x.sum()
         # print("return value {}".format(ret_val))
