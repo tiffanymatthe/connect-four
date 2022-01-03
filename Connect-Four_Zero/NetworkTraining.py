@@ -7,6 +7,8 @@ from C4Game import C4Game
 from C4Node import C4Node
 
 import math
+import time
+import multiprocessing
 from typing import List
 import numpy as np
 import tensorflow as tf
@@ -54,10 +56,15 @@ class NetworkTraining(object):
     @staticmethod
     def run_selfplay(config: C4Config, storage: SharedStorage,
                      replay_buffer: ReplayBuffer):
+        i = 0
+        id = multiprocessing.current_process()._identity[0]
+        print("Starting self-play for process {}".format(id))
         while True:
             network = storage.latest_network()
             game = NetworkTraining.play_game(config, network)
             replay_buffer.save_game(game)
+            print("Finished game {} for process {}".format(i, id))
+            i += 1
 
     # Each game is produced by starting at the initial board position, then
     # repeatedly executing a Monte Carlo Tree Search to generate moves until the end
@@ -174,14 +181,16 @@ class NetworkTraining(object):
             boundaries, config.learning_rate_schedule.values())
         optimizer = tf.keras.optimizers.SGD(learning_rate_fn,
                                             config.momentum)
+        while (replay_buffer.is_empty()): # sleep until there is something to do.
+            time.sleep(5)
         for i in range(config.training_steps):
             if i % config.checkpoint_interval == 0:
                 print("At checkpoint {}/{}".format(i, config.training_steps))
                 print("Replay buffer size: {}".format(replay_buffer.get_buffer_size()))
                 storage.save_network(i, network)
             if replay_buffer.is_empty():
+                time.sleep(0.02)
                 continue
-            # print("Non-empty buffer at iteration {}.".format(i))
             batch = replay_buffer.sample_batch()
             NetworkTraining.update_weights(
                 optimizer, network, batch, config.weight_decay)
