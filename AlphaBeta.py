@@ -53,21 +53,22 @@ class Alpha_beta:
         opponent = node.SwitchPlayer(node.to_play())
         node.turn = opponent
         legalmoves = node.unfilled_cols
+        # print("list of legal moves in max ", legalmoves)
         if (depth==0) or len(node.unfilled_cols)==0:
             return self.eval_fn(node)
         value= -np.inf
         for col in legalmoves:
             # print("COOLUMNNNN IN MAXXX FUNCTION", col)
             if node.is_terminal():
-                print("REACHED LINE 69")
                 break
-            newboard = node.move(col)
-            value = max(value, self.minfunction(newboard, depth-1, alpha, beta))
-            # print("LENGTHHH OF UNFILLED COLUMNS IN MAXX FUNCTION", len(node.unfilled_cols))
-            newboard = node.unmove(col)
+            if not node.is_col_full(col):
+                newboard = node.move(col)
+                value = max(value, self.minfunction(newboard, depth-1, alpha, beta))
+                # print("LENGTHHH OF UNFILLED COLUMNS IN MAXX FUNCTION", len(node.unfilled_cols))
+                newboard = node.unmove(col)
             # print("LENGTHHH OF UNFILLED COLUMNS IN new board MAXX FUNCTION", len(newboard.unfilled_cols))
-            if value >= beta:
-                return value
+                if value >= beta:
+                    return value
             alpha = max(alpha, value)
         return value
     
@@ -75,18 +76,19 @@ class Alpha_beta:
         player = node.SwitchPlayer(node.to_play())
         node.turn = player
         legalmoves = node.unfilled_cols
+        # print("List of legal moves ", legalmoves)
         if (depth==0) or len(node.unfilled_cols)==0:
             return self.eval_fn(node)
         value = np.inf
         for col in legalmoves:
             if node.is_terminal():
-                print("REACHED LINE 91")
                 break
-            newboard = node.move(col)
-            value = min(value, self.maxfunction(newboard, depth-1, alpha, beta))
-            newboard = node.unmove(col)
-            if value <= alpha:
-                return value
+            if not node.is_col_full(col):
+                newboard = node.move(col)
+                value = min(value, self.maxfunction(newboard, depth-1, alpha, beta))
+                newboard = node.unmove(col)
+                if value <= alpha:
+                    return value
             beta = min(beta, value)
         return value
     
@@ -124,67 +126,8 @@ class Alpha_beta:
         return board
 
 
-    def alpha_beta_search(self, node):
-        """Search game to determine best action; use alpha-beta pruning.
-        This version searches all the way to the leaves."""
-
-        player = node.to_play()
-
-        # Functions used by alpha_beta
-        def max_value(node, alpha, beta):
-            if node.is_terminal():
-                return node.utility(player)
-            v = -np.inf
-            scratch_game = node.get_copy()
-            for a in scratch_game.unfilled_cols:
-                # Previously was the following line where the game.result returned
-                # the utility or the reward values of the current game state
-                # v = max(v, min_value(game.result(state, a), alpha, beta, depth + 1))
-                try:
-                    newNode = scratch_game.move(a)
-                    v = max(v, min_value(newNode, alpha, beta))
-                    if v >= beta:
-                        return v
-                    alpha = max(alpha, v)
-                except:
-                    break
-            return v
-
-        def min_value(node, alpha, beta):
-            if node.is_terminal():
-                return node.utility(player)
-            v = np.inf
-            scratch_game = node.get_copy()
-            for a in scratch_game.unfilled_cols:
-                
-                try:
-                    newNode = scratch_game.move(a)
-                    v = min(v, max_value(newNode, alpha, beta))
-                    if v <= alpha:
-                        return v
-                except:
-                    break
-                beta = min(beta, v)
-            return v
-
-        # Body of alpha_beta_search:
-        best_score = -np.inf
-        beta = np.inf
-        best_action = None
-        scratch_game = node.get_copy()
-        for a in scratch_game.unfilled_cols:
-            try:
-                newNode = scratch_game.move(a)
-                v = min_value(newNode, best_score, beta)
-                if v > best_score:
-                    best_score = v
-                    best_action = a
-            except:
-                break
-
-        return node.move(best_action)
-
-
+    #This is the older version of alpha_beta which never ran to its full extent
+    #and had a lot of bugs. It is still here tho, just for reference.
     def alpha_beta_pruning(self, node, d=4, cutoff_test=None, eval_fn=None):
         """Search game to determine best action; use alpha-beta pruning.
         This version cuts off search and uses an evaluation function."""
@@ -282,6 +225,8 @@ def play_against_MCTS(iterations):
     board = Node()
     board.see_board()
     while True:
+        # this needs to return a Node, same Node as what MCTS returns.
+        # board = ab_tree.alpha_beta_search(board)
         for _ in range(iterations):
             mcts_tree.do_rollout(board)
         board = mcts_tree.choose(board)
@@ -289,9 +234,7 @@ def play_against_MCTS(iterations):
         print("mcts executed")
         if (board.is_terminal()):
             break
-        # this needs to return a Node, same Node as what MCTS returns.
-        # board = ab_tree.alpha_beta_search(board)
-        board = ab_tree.searching_function(board, 6) #Here is AI's move. Takes as input current table (board), depth and opponents mark. Output should be new gameboard with AI's move.
+        board = ab_tree.searching_function(board, 8) #Here is AI's move. Takes as input current table (board), depth and opponents mark. Output should be new gameboard with AI's move.
         print("executed alpha beta")
         board.see_board()
         if (board.is_terminal()):
@@ -299,7 +242,7 @@ def play_against_MCTS(iterations):
 
     winner = board.get_winner()
     print("Winner is {}: {}".format(winner, board.colors[winner]))
-    print("1 is MCTS, 0 is AlphaBeta")
+    print("x is MCTS, o is AlphaBeta")
 
 
 if __name__ == "__main__":

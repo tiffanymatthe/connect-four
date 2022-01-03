@@ -230,14 +230,13 @@ class Node():
         # self.current_state[self.unfilled_cols[col], col] = self.turn
         # self.unfilled_cols[col] -= 1
         # self.turn = not self.turn
-        # self.updated_unfilled_cols()
         return new_board
 
     def unmove(self, col):
         new_board = self.get_copy()
         new_board.current_state[new_board.unfilled_cols[col], col] = -1 # This function make a move and increases count of moves
-        # s.updated_unfilled_cols()
-        return self
+        new_board.unfilled_cols[col] += 1
+        return new_board
 
 
     def get_winner(self) -> int:
