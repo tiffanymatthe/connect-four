@@ -60,7 +60,12 @@ class NetworkTraining(object):
         id = multiprocessing.current_process()._identity[0]
         print("Starting self-play for process {}".format(id))
         while True:
-            network = storage.latest_network()
+            for _ in range(3):
+                try:
+                    network = storage.latest_network()
+                    break
+                except KeyError:
+                    print(f"{BColors.WARNING}Key Error when trying to retrieve latest network. Trying again.{BColors.ENDC}")
             game = NetworkTraining.play_game(config, network)
             replay_buffer.save_game(game)
             print("Finished game {} for process {}".format(i, id))
@@ -186,7 +191,7 @@ class NetworkTraining(object):
         for i in range(config.training_steps):
             print(f"At training step {i}")
             if i % config.checkpoint_interval == 0:
-                print("{}At checkpoint {}/{}{}".format(bcolors.OKBLUE, i, config.training_steps, bcolors.ENDC))
+                print("{}At checkpoint {}/{}{}".format(BColors.OKBLUE, i, config.training_steps, BColors.ENDC))
                 print("Replay buffer size: {}".format(replay_buffer.get_buffer_size()))
                 storage.save_network(i, network)
             if replay_buffer.is_empty():
