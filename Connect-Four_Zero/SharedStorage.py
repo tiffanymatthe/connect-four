@@ -16,7 +16,7 @@ class SharedStorage(object):
 
     def save_network(self, step: int, network: Network):
         with self.mutex:
-            self._networks[step] = network
+            self._networks[step] = network.clone_network()
 
     def get_num_networks(self):
         return len(self._networks)

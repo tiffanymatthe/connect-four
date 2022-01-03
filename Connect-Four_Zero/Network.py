@@ -17,6 +17,12 @@ class Network(object):
     def __init__(self) -> None:
         # TODO: initialize model with uniform policy and value 0.5
         self.model = self.__get_model()
+        self.width = 7
+        self.height = 6
+        self.losses = {
+            "value_output": "mse", 
+            "probability_output":"categorical_crossentropy"
+        }
 
     def inference(self, image):
         """
@@ -33,6 +39,16 @@ class Network(object):
         # Returns the weights of this network as a list.
         # https://github.com/google/prettytensor/issues/6
         return self.model.trainable_weights
+
+    def clone_network(self):
+        """Clones the network with same weights and compiled model."""
+        new = Network()
+        new.model = tf.keras.models.clone_model(self.model)
+        new.model.build((self.height, self.width, 3))
+        new.model.compile(optimizer='sgd', loss=self.losses)
+        new.model.set_weights(self.model.get_weights())
+
+        return new
 
     @staticmethod
     def get_common_layers(inputs):
@@ -88,7 +104,6 @@ class Network(object):
     @staticmethod
     def compile_model(width, height):
         # 3 because we will have 3 channels (red tokens, yellow tokens, board state)
-        # TODO: find proper loss function, I just took some random one
         inputs = Input(shape=(height, width, 3))
         value_branch = Network.get_value_branch(inputs)
         policy_branch = Network.get_policy_branch(inputs)
