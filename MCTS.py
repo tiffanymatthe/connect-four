@@ -118,7 +118,6 @@ def get_player_move(board):
 
     return board
 
-
 def play_game(iterations):
     tree = MCTS()
     board = Node.Node()
