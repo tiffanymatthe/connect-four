@@ -161,11 +161,11 @@ def play_against_model(model):
 if __name__ == "__main__":
     # print_summary()
     # profile_inference()
-    final_network = train_network()
-    final_network.model.save("models/model_1")
+    # final_network = train_network()
+    # final_network.model.save("models/model_1")
     # profile_game()
     # test_shared_storage()
     # profile_multiprocessing()
 
-    # model=tf.keras.models.load_model('models/model_1')
-    # play_against_model(model)
+    model=tf.keras.models.load_model('models/model_1')
+    play_against_model(model)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from Network import Network
 from multiprocessing import Lock
+from BColors import BColors
 
 class SharedStorage(object):
     def __init__(self):
@@ -8,11 +9,16 @@ class SharedStorage(object):
         self._networks = {}
 
     def latest_network(self) -> Network:
-        with self.mutex:
-            if self._networks:
-                return self._networks[max(self._networks.keys())]
-            else:
-                return make_uniform_network()
+        try:
+            with self.mutex:
+                if self._networks:
+                    return self._networks[max(self._networks.keys())]
+                else:
+                    return make_uniform_network()
+        except KeyError:
+            # TODO: could be infinite recursion...
+            print(f"{BColors.WARNING}Key Error when trying to retrieve latest network. Trying again.{BColors.ENDC}")
+            return self.latest_network()
 
     def save_network(self, step: int, network: Network):
         with self.mutex:

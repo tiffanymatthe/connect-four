@@ -5,6 +5,7 @@ from ReplayBuffer import ReplayBuffer
 from Network import Network
 from C4Game import C4Game
 from C4Node import C4Node
+from BColors import BColors
 
 import math
 import time
@@ -14,7 +15,6 @@ import numpy as np
 import tensorflow as tf
 from multiprocessing import Process
 from multiprocessing.managers import BaseManager
-
 
 class NetworkTraining(object):
 
@@ -184,12 +184,12 @@ class NetworkTraining(object):
         while (replay_buffer.is_empty()): # sleep until there is something to do.
             time.sleep(5)
         for i in range(config.training_steps):
+            print(f"At training step {i}")
             if i % config.checkpoint_interval == 0:
-                print("At checkpoint {}/{}".format(i, config.training_steps))
+                print("{}At checkpoint {}/{}{}".format(bcolors.OKBLUE, i, config.training_steps, bcolors.ENDC))
                 print("Replay buffer size: {}".format(replay_buffer.get_buffer_size()))
                 storage.save_network(i, network)
             if replay_buffer.is_empty():
-                time.sleep(0.02)
                 continue
             batch = replay_buffer.sample_batch()
             NetworkTraining.update_weights(
@@ -214,8 +214,8 @@ class NetworkTraining(object):
                 loss += weight_decay * tf.nn.l2_loss(weights)
 
             return loss
-
         optimizer.minimize(loss_fcn, var_list=network.get_weights())
+        print(f"{BColors.OKCYAN}Finished updating weights{BColors.ENDC}")
 
     @staticmethod
     def softmax_sample(d):
