@@ -21,6 +21,12 @@ class C4Game(object):
         self.empty = -1
         self.win_num = 4  # need 4 tokens in a line to win
 
+        self.colors = {
+            -1: "\033[40m - \033[0m",  # black
+            0: "\033[41m o \033[0m",  # red
+            1: "\033[43m x \033[0m"  # yellow
+        }
+
         if history is None:
             self.history.append(
                 self.empty * np.ones((self.col_height, self.num_col)).astype(int))
@@ -177,3 +183,42 @@ class C4Game(object):
         if col_num < 0 or col_num >= self.num_col:
             raise ValueError("Invalid column number {}".format(col_num))
         return unfilled_cols[col_num] == -100
+
+    def get_color_coded_background(self, i):
+        """
+        Get marker to print for a certain player or empty space.
+        """
+        return self.colors[i]
+
+    def print_a_ndarray(self, map1, row_sep=" "):
+        """
+        Prints array.
+        https://stackoverflow.com/questions/56496731/coloring-entries-in-an-matrix-2d-numpy-array/56497272
+        """
+        n, m = map1.shape
+        vertical_padding = 2
+        m = m + vertical_padding  # for vertical axis
+        fmt_str = "\n".join([row_sep.join(["{}"]*m)]*n)
+        column_labels = ['0', '1', '2', '3', '4', '5', '6']
+        row_labels = ['a', 'b', 'c', 'd', 'e', 'f']
+
+        map1 = np.pad(map1, [(0, 0), (vertical_padding, 0)])
+
+        for i, label in enumerate(row_labels):
+            map1[i, 1] = ' | '
+            map1[i, 0] = label
+
+        print(fmt_str.format(*map1.ravel()))
+        col_axis = '  '.join(map(str, column_labels))
+        print('    ' + '―' * 20)
+        print('    ' + ' ' + col_axis)
+
+    def see_board(self):
+        """
+        Display Board. 'o' represents player 0, 'x' represents player 1, '-' represents an empty space.
+        """
+        display_board = self.history[-1]
+        coloured_board = np.vectorize(
+            self.get_color_coded_background)(display_board)
+        self.print_a_ndarray(coloured_board, row_sep="")
+        print()
