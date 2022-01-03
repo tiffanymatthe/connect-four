@@ -29,6 +29,7 @@ class NetworkTraining(object):
             p = NetworkTraining.launch_job(
                 NetworkTraining.run_selfplay, config, storage, replay_buffer)
             processes.append(p)
+            print("THE P VALUEEEE {}".format(p))
 
         NetworkTraining.train_network(config, storage, replay_buffer)
 
@@ -80,6 +81,7 @@ class NetworkTraining(object):
         game = C4Game()
         while not game.terminal() and len(game.history) < config.max_moves:
             action, root = NetworkTraining.run_mcts(config, game, network)
+            print("THHEEEE ACCTIIIONNNNN {}".format(action))
             game.apply(action)
             game.store_search_statistics(root)
         return game
