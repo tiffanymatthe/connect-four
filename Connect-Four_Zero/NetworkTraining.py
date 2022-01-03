@@ -18,7 +18,8 @@ class NetworkTraining(object):
 
     @staticmethod
     def alphazero(config: C4Config):
-        replay_buffer, storage = NetworkTraining.get_buffer_storage_from_base_manager(config)
+        replay_buffer, storage = NetworkTraining.get_buffer_storage_from_base_manager(
+            config)
 
         for _ in range(config.num_actors):
             NetworkTraining.launch_job(
@@ -34,7 +35,7 @@ class NetworkTraining(object):
         BaseManager.register('SharedStorage', SharedStorage)
         manager = BaseManager()
         manager.start()
-        replay_buffer = manager.ReplayBuffer(config)    
+        replay_buffer = manager.ReplayBuffer(config)
         storage = manager.SharedStorage()
         return replay_buffer, storage
 
@@ -164,8 +165,12 @@ class NetworkTraining(object):
     def train_network(config: C4Config, storage: SharedStorage,
                       replay_buffer: ReplayBuffer):
         network = Network()
-        optimizer = tf.keras.optimizers.SGD(config.learning_rate_schedule,
-                                            config.momentum)
+        boundaries = list(config.learning_rate_schedule.keys())
+        boundaries.pop(0)
+        learning_rate_fn = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+            boundaries, config.learning_rate_schedule.values())
+        optimizer = tf.compat.v1.train.MomentumOptimizer(learning_rate_fn,
+                                                         config.momentum)
         for i in range(config.training_steps):
             if i % config.checkpoint_interval == 0:
                 storage.save_network(i, network)
@@ -178,25 +183,26 @@ class NetworkTraining(object):
         storage.save_network(config.training_steps, network)
 
     @staticmethod
-    def update_weights(optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,
+    def update_weights(optimizer: tf.compat.v1.train.Optimizer, network: Network, batch,
                        weight_decay: float):
-        loss = 0
-        mse = tf.keras.losses.MeanSquaredError(reduction="auto")
-        for image, (target_value, target_policy) in batch:
-            value, policy_logits = network.inference(image)
-            target_value = [target_value]
-            loss += (
-                mse(value, target_value).numpy() +
-                tf.nn.softmax_cross_entropy_with_logits(
-                    logits=policy_logits, labels=target_policy))
 
-        for weights in network.get_weights():
-            loss += weight_decay * tf.nn.l2_loss(weights)
+        def loss_fcn():
+            loss = 0
+            mse = tf.keras.losses.MeanSquaredError(reduction="auto")
+            for image, (target_value, target_policy) in batch:
+                value, policy_logits = network.inference(image)
+                target_value = [target_value]
+                loss += (
+                    mse(value, target_value).numpy() +
+                    tf.nn.softmax_cross_entropy_with_logits(
+                        logits=policy_logits, labels=target_policy))
 
-        print("LOSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
-        print(loss)
+            for weights in network.get_weights():
+                loss += weight_decay * tf.nn.l2_loss(weights)
 
-        optimizer.minimize(loss)
+            return loss
+
+        optimizer.minimize(loss_fcn)
 
     @staticmethod
     def softmax_sample(d):
@@ -211,9 +217,3 @@ class NetworkTraining(object):
     def launch_job(f, *args):
         x = Process(target=f, args=args)
         x.start()
-
-if __name__ == "__main__":
-    mse = tf.keras.losses.MeanSquaredError(reduction="auto")
-    target_value = [0.5]
-    value = tf.constant(-0.12986256) # needs to be an array
-    print(mse(value, target_value).numpy())
