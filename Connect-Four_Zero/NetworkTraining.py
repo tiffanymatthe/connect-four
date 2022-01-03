@@ -54,12 +54,10 @@ class NetworkTraining(object):
     @staticmethod
     def run_selfplay(config: C4Config, storage: SharedStorage,
                      replay_buffer: ReplayBuffer):
-        i = 0
         while True:
             network = storage.latest_network()
             game = NetworkTraining.play_game(config, network)
             replay_buffer.save_game(game)
-            i += 1
 
     # Each game is produced by starting at the initial board position, then
     # repeatedly executing a Monte Carlo Tree Search to generate moves until the end
@@ -179,6 +177,7 @@ class NetworkTraining(object):
         for i in range(config.training_steps):
             if i % config.checkpoint_interval == 0:
                 print("At checkpoint {}/{}".format(i, config.training_steps))
+                # TODO: find out if the network is modified after saving (since it's the same object)
                 storage.save_network(i, network)
             if replay_buffer.is_empty():
                 continue

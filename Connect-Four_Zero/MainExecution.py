@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
@@ -20,9 +21,6 @@ from NetworkTraining import NetworkTraining
 from Network import Network
 from DataGenerator import DataGenerator
 import numpy as np
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
 
 def time_game():
     network = Network()
@@ -163,11 +161,11 @@ def play_against_model(model):
 if __name__ == "__main__":
     # print_summary()
     # profile_inference()
-    # final_network = train_network()
-    # final_network.model.save("models/model_1")
+    final_network = train_network()
+    final_network.model.save("models/model_1")
     # profile_game()
     # test_shared_storage()
     # profile_multiprocessing()
 
-    model=tf.keras.models.load_model('models/model_1')
-    play_against_model(model)
+    # model=tf.keras.models.load_model('models/model_1')
+    # play_against_model(model)
