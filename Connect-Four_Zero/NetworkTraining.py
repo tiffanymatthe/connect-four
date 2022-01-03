@@ -232,7 +232,15 @@ class NetworkTraining(object):
         Returns max visit count and action.
         """
         # could add in temperature parameter if wanted
-        return max(d, key=lambda item: item[0])
+        
+        print("input {}".format(d))
+        # ret_val = max(d, key=lambda item: item[0])
+        # print("return value {}".format(ret_val))
+        e_x = np.exp(d[] - np.max(d))
+        ret_val = e_x / e_x.sum()
+        print("return value {}".format(ret_val))
+        return 
+        return ret_val
 
     @staticmethod
     def launch_job(f, *args):
