@@ -21,9 +21,10 @@ class Alpha_beta:
                                          [3, 4, 5, 7, 5, 4, 3]])
         self.rows = 6
         self.cols = 7
+        self.depth = 6
 
     # here is where the evaluation table is called
-    def evaluateContent(self, node):
+    def eval_fn(self, node):
         """
         The numbers in the table above represent how many four conncted positions there
         can be including that space. For example, the first entry 3 represents the connected
@@ -46,11 +47,86 @@ class Alpha_beta:
                     sum -= node.current_state[i][j]
         return utility + sum
 
-    # node is the current node in the game
+    
+    #Method used in alpha beta pruning search 
+    def maxfunction(self, node, depth, alpha, beta):
+        opponent = node.SwitchPlayer(node.to_play())
+        node.turn = opponent
+        legalmoves = node.unfilled_cols
+        if (depth==0) or len(node.unfilled_cols)==0:
+            return self.eval_fn(node)
+        value= -np.inf
+        for col in legalmoves:
+            # print("COOLUMNNNN IN MAXXX FUNCTION", col)
+            if node.is_terminal():
+                print("REACHED LINE 69")
+                break
+            newboard = node.move(col)
+            value = max(value, self.minfunction(newboard, depth-1, alpha, beta))
+            # print("LENGTHHH OF UNFILLED COLUMNS IN MAXX FUNCTION", len(node.unfilled_cols))
+            newboard = node.unmove(col)
+            # print("LENGTHHH OF UNFILLED COLUMNS IN new board MAXX FUNCTION", len(newboard.unfilled_cols))
+            if value >= beta:
+                return value
+            alpha = max(alpha, value)
+        return value
+    
+    def minfunction(self, node, depth, alpha, beta):
+        player = node.SwitchPlayer(node.to_play())
+        node.turn = player
+        legalmoves = node.unfilled_cols
+        if (depth==0) or len(node.unfilled_cols)==0:
+            return self.eval_fn(node)
+        value = np.inf
+        for col in legalmoves:
+            if node.is_terminal():
+                print("REACHED LINE 91")
+                break
+            newboard = node.move(col)
+            value = min(value, self.maxfunction(newboard, depth-1, alpha, beta))
+            newboard = node.unmove(col)
+            if value <= alpha:
+                return value
+            beta = min(beta, value)
+        return value
+    
+
+    def alphabetapruning(self, node, depth, alpha, beta): 
+        #This is the alphabeta-function modified from: 
+        #https://github.com/msaveski/connect-four
+        values = []
+        cols = []
+        value = -np.inf
+        for col in node.unfilled_cols:
+            if node.is_terminal():
+                break
+            node = node.move(col)
+            value = max(value, self.minfunction(node, depth-1, alpha, beta))
+            values.append(value)
+            cols.append(col)
+            node = node.unmove(col)
+        largestvalue= max(values)
+        print(cols)
+        print(values)
+        for i in range(len(values)):
+            if largestvalue==values[i]:
+                position = cols[i]
+                return largestvalue, position
+
+    def searching_function(self, node, depth):
+        #This function update turn to opponent and calls alphabeta (main algorithm) 
+        #and after that update 
+        #new board (add alphabeta position to old board) and returns new board.
+        newboard = copy.deepcopy(node)
+        value, position = self.alphabetapruning(newboard, depth, -np.inf, np.inf)
+        print("TOOOOO MOVE ISSS COLUMNNNN" + str(position))
+        board = node.move(position)
+        return board
+
 
     def alpha_beta_search(self, node):
         """Search game to determine best action; use alpha-beta pruning.
-        As in [Figure 5.7], this version searches all the way to the leaves."""
+        This version searches all the way to the leaves."""
 
         player = node.to_play()
 
@@ -64,12 +140,14 @@ class Alpha_beta:
                 # Previously was the following line where the game.result returned
                 # the utility or the reward values of the current game state
                 # v = max(v, min_value(game.result(state, a), alpha, beta, depth + 1))
-                
-                newNode, result = scratch_game.result(a)
-                v = max(v, min_value(newNode, alpha, beta))
-                if v >= beta:
-                    return v
-                alpha = max(alpha, v)
+                try:
+                    newNode = scratch_game.move(a)
+                    v = max(v, min_value(newNode, alpha, beta))
+                    if v >= beta:
+                        return v
+                    alpha = max(alpha, v)
+                except:
+                    break
             return v
 
         def min_value(node, alpha, beta):
@@ -79,10 +157,13 @@ class Alpha_beta:
             scratch_game = node.get_copy()
             for a in scratch_game.unfilled_cols:
                 
-                newNode, result = scratch_game.result(a)
-                v = min(v, max_value(newNode, alpha, beta))
-                if v <= alpha:
-                    return v
+                try:
+                    newNode = scratch_game.move(a)
+                    v = min(v, max_value(newNode, alpha, beta))
+                    if v <= alpha:
+                        return v
+                except:
+                    break
                 beta = min(beta, v)
             return v
 
@@ -92,11 +173,14 @@ class Alpha_beta:
         best_action = None
         scratch_game = node.get_copy()
         for a in scratch_game.unfilled_cols:
-            newNode, result = scratch_game.result(a)
-            v = min_value(newNode, best_score, beta)
-            if v > best_score:
-                best_score = v
-                best_action = a
+            try:
+                newNode = scratch_game.move(a)
+                v = min_value(newNode, best_score, beta)
+                if v > best_score:
+                    best_score = v
+                    best_action = a
+            except:
+                break
 
         return node.move(best_action)
 
@@ -206,7 +290,8 @@ def play_against_MCTS(iterations):
         if (board.is_terminal()):
             break
         # this needs to return a Node, same Node as what MCTS returns.
-        board = ab_tree.alpha_beta_search(board)
+        # board = ab_tree.alpha_beta_search(board)
+        board = ab_tree.searching_function(board, 6) #Here is AI's move. Takes as input current table (board), depth and opponents mark. Output should be new gameboard with AI's move.
         print("executed alpha beta")
         board.see_board()
         if (board.is_terminal()):

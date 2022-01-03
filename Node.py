@@ -218,6 +218,7 @@ class Node():
         Returns new Node.
         """
         if (self.is_terminal()):
+            print(self.current_state)
             raise RuntimeError("Move denied. Board is terminal.")
         self.check_col_valid(col)
         if self.is_col_full(col):
@@ -226,7 +227,18 @@ class Node():
         new_board.current_state[new_board.unfilled_cols[col], col] = self.turn
         new_board.unfilled_cols[col] -= 1
         new_board.turn = not self.turn
+        # self.current_state[self.unfilled_cols[col], col] = self.turn
+        # self.unfilled_cols[col] -= 1
+        # self.turn = not self.turn
+        # self.updated_unfilled_cols()
         return new_board
+
+    def unmove(self, col):
+        new_board = self.get_copy()
+        new_board.current_state[new_board.unfilled_cols[col], col] = -1 # This function make a move and increases count of moves
+        # s.updated_unfilled_cols()
+        return self
+
 
     def get_winner(self) -> int:
         """
@@ -311,6 +323,12 @@ class Node():
             return 1
         else:
             return 0
+    
+    def SwitchPlayer(self, player):
+        if player == 1:
+            return 0
+        elif player == 0:
+            return 1
     
     def result(self, col:int):
         try:
