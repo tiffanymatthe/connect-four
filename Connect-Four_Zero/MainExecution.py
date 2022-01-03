@@ -159,10 +159,10 @@ def play_against_model(model):
     print("Winner is {}: {}".format(winner, board.colors[winner]))
 
 if __name__ == "__main__":
-    # print_summary()
     # profile_inference()
     final_network = train_network()
-    final_network.model.save("models/model_2")
+    final_network.model.save("models/model_3")
+    print_summary()
     # profile_game()
     # test_shared_storage()
     # profile_multiprocessing()
