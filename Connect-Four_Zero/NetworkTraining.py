@@ -177,7 +177,7 @@ class NetworkTraining(object):
         for i in range(config.training_steps):
             if i % config.checkpoint_interval == 0:
                 print("At checkpoint {}/{}".format(i, config.training_steps))
-                # TODO: find out if the network is modified after saving (since it's the same object)
+                print("Replay buffer size: {}".format(replay_buffer.get_buffer_size()))
                 storage.save_network(i, network)
             if replay_buffer.is_empty():
                 continue

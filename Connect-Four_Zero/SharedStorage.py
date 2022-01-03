@@ -8,11 +8,11 @@ class SharedStorage(object):
         self._networks = {}
 
     def latest_network(self) -> Network:
-        if self._networks:
-            with self.mutex:
+        with self.mutex:
+            if self._networks:
                 return self._networks[max(self._networks.keys())]
-        else:
-            return make_uniform_network()  # policy -> uniform, value -> 0.5
+            else:
+                return make_uniform_network()
 
     def save_network(self, step: int, network: Network):
         with self.mutex:
