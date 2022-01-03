@@ -102,20 +102,25 @@ class NetworkTraining(object):
             node = root
             scratch_game = game.clone()
             search_path = [node]
+        
+        print("Length of the search path after the for loop {}".format(len(search_path)))
 
         while node.expanded():
             action, node = NetworkTraining.select_child(config, node)
             scratch_game.apply(action)
+            # print("node expansion and child picked {}".format(node))
             search_path.append(node)
             value = NetworkTraining.evaluate(node, scratch_game, network)
             NetworkTraining.backpropagate(
                 search_path, value, scratch_game.to_play())
+        print("Length of the search path after node expansion {}".format(len(search_path)))
         return NetworkTraining.select_action(config, game, root), root
 
     @staticmethod
     def select_action(config: C4Config, game: C4Game, root: C4Node):
         visit_counts = [(child.visit_count, action)
                         for action, child in root.children.items()]
+        
         if len(game.history) < config.num_sampling_moves:
             _, action = NetworkTraining.softmax_sample(visit_counts)
         else:
@@ -128,6 +133,8 @@ class NetworkTraining(object):
     def select_child(config: C4Config, node: C4Node):
         _, action, child = max((NetworkTraining.ucb_score(config, node, child), action, child)
                                for action, child in node.children.items())
+        print("OUTPUT of max function {}".format(max((NetworkTraining.ucb_score(config, node, child), action, child)
+                               for action, child in node.children.items())))
         return action, child
 
     # The score for a node is based on its value, plus an exploration bonus based on
@@ -234,12 +241,12 @@ class NetworkTraining(object):
         # could add in temperature parameter if wanted
         
         print("input {}".format(d))
-        # ret_val = max(d, key=lambda item: item[0])
-        # print("return value {}".format(ret_val))
-        e_x = np.exp(d[] - np.max(d))
-        ret_val = e_x / e_x.sum()
+        ret_val = max(d, key=lambda item: item[0])
         print("return value {}".format(ret_val))
-        return 
+        # e_x = np.exp(d[] - np.max(d))
+        # ret_val = e_x / e_x.sum()
+        # print("return value {}".format(ret_val))
+        # return 
         return ret_val
 
     @staticmethod
