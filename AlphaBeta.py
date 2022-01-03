@@ -48,6 +48,59 @@ class Alpha_beta:
 
     # node is the current node in the game
 
+    def alpha_beta_search(self, node):
+        """Search game to determine best action; use alpha-beta pruning.
+        As in [Figure 5.7], this version searches all the way to the leaves."""
+
+        player = node.to_play()
+
+        # Functions used by alpha_beta
+        def max_value(node, alpha, beta):
+            if node.is_terminal():
+                return node.utility(player)
+            v = -np.inf
+            scratch_game = node.get_copy()
+            for a in scratch_game.unfilled_cols:
+                # Previously was the following line where the game.result returned
+                # the utility or the reward values of the current game state
+                # v = max(v, min_value(game.result(state, a), alpha, beta, depth + 1))
+                
+                newNode, result = scratch_game.result(a)
+                v = max(v, min_value(newNode, alpha, beta))
+                if v >= beta:
+                    return v
+                alpha = max(alpha, v)
+            return v
+
+        def min_value(node, alpha, beta):
+            if node.is_terminal():
+                return node.utility(player)
+            v = np.inf
+            scratch_game = node.get_copy()
+            for a in scratch_game.unfilled_cols:
+                
+                newNode, result = scratch_game.result(a)
+                v = min(v, max_value(newNode, alpha, beta))
+                if v <= alpha:
+                    return v
+                beta = min(beta, v)
+            return v
+
+        # Body of alpha_beta_search:
+        best_score = -np.inf
+        beta = np.inf
+        best_action = None
+        scratch_game = node.get_copy()
+        for a in scratch_game.unfilled_cols:
+            newNode, result = scratch_game.result(a)
+            v = min_value(newNode, best_score, beta)
+            if v > best_score:
+                best_score = v
+                best_action = a
+
+        return node.move(best_action)
+
+
     def alpha_beta_pruning(self, node, d=4, cutoff_test=None, eval_fn=None):
         """Search game to determine best action; use alpha-beta pruning.
         This version cuts off search and uses an evaluation function."""
@@ -57,7 +110,6 @@ class Alpha_beta:
         If there are odd filled columns then it is player 2's turn otherwise 1.
         Player 1 is 1 and player 2 is 0 as defined in C4Game.py
         """
-        unfilledCols = node.unfilled_cols
         player = node.to_play()
 
         # Functions used by alpha_beta
@@ -66,30 +118,28 @@ class Alpha_beta:
             if cutoff_test(node, depth):
                 return eval_fn(node)
             v = -np.inf
+            scratch_game = node.get_copy()
             for a in scratch_game.unfilled_cols:
                 # Previously was the following line where the game.result returned
                 # the utility or the reward values of the current game state
                 # v = max(v, min_value(game.result(state, a), alpha, beta, depth + 1))
                 
-                move = scratch_game.move()
-                scratch_game.updated_unfilled_cols()
-                currPlayer = scratch_game.to_play()
-                result = game.terminal_value(currPlayer)
+                _, result = scratch_game.result(a)
                 v = max(v, min_value(result, alpha, beta, depth + 1))
                 if v >= beta:
                     return v
                 alpha = max(alpha, v)
             return v
 
-        def min_value(state, alpha, beta, depth):
-            if cutoff_test(state, depth):
-                return eval_fn(state)
+        def min_value(node, alpha, beta, depth):
+            if cutoff_test(node, depth):
+                return eval_fn(node)
             v = np.inf
 
-            for a in game.legal_actions():
-                game.apply(a)
-                currPlayer = game.to_play()
-                result = game.terminal_value(currPlayer)
+            scratch_game = node.get_copy()
+            for a in scratch_game.unfilled_cols:
+                
+                _, result = scratch_game.result(a)
                 v = min(v, max_value(result, alpha, beta, depth + 1))
                 if v <= alpha:
                     return v
@@ -99,20 +149,21 @@ class Alpha_beta:
         # Body of alpha_beta_cutoff_search starts here:
         # The default test cuts off at depth d or at a terminal state
         cutoff_test = (cutoff_test or (
-            lambda state, depth: depth > d or game.terminal()))
-        eval_fn = eval_fn or (lambda state: game.terminal_value(player))
+            lambda node, depth: depth > d or node.is_terminal()))
+        eval_fn = eval_fn or (lambda node: node.utility(player))
         best_score = -np.inf
         beta = np.inf
         best_action = None
-        for a in game.legal_actions():
-            game.apply(a)
-            toPlayResult = game.to_play()
-            result = game.terminal_value(toPlayResult)
-        v = min_value(result, best_score, beta, 1)
-        if v > best_score:
-            best_score = v
-            best_action = a
-        return best_action
+
+        scratch_game = node.get_copy()
+        for a in scratch_game.unfilled_cols:
+            _, result = scratch_game.result(a)
+            v = min_value(result, best_score, beta, 1)
+            if v > best_score:
+                best_score = v
+                best_action = a
+
+        return node.move(best_action)
 
 
 def get_int_input(message):
@@ -142,6 +193,7 @@ def get_player_move(board):
 
 def play_against_MCTS(iterations):
     ab_tree = Alpha_beta()
+    print("initialized alpha beta")
     mcts_tree = MCTS()
     board = Node()
     board.see_board()
@@ -150,10 +202,12 @@ def play_against_MCTS(iterations):
             mcts_tree.do_rollout(board)
         board = mcts_tree.choose(board)
         board.see_board()
+        print("mcts executed")
         if (board.is_terminal()):
             break
         # this needs to return a Node, same Node as what MCTS returns.
-        board = ab_tree.alpha_beta_pruning(board, board)
+        board = ab_tree.alpha_beta_search(board)
+        print("executed alpha beta")
         board.see_board()
         if (board.is_terminal()):
             break
