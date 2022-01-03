@@ -52,7 +52,7 @@ class Alpha_beta:
     def maxfunction(self, node, depth, alpha, beta):
         opponent = node.SwitchPlayer(node.to_play())
         node.turn = opponent
-        legalmoves = node.unfilled_cols
+        legalmoves = node.legal_moves()
         # print("list of legal moves in max ", legalmoves)
         if (depth==0) or len(node.unfilled_cols)==0:
             return self.eval_fn(node)
@@ -61,21 +61,20 @@ class Alpha_beta:
             # print("COOLUMNNNN IN MAXXX FUNCTION", col)
             if node.is_terminal():
                 break
-            if not node.is_col_full(col):
-                newboard = node.move(col)
-                value = max(value, self.minfunction(newboard, depth-1, alpha, beta))
-                # print("LENGTHHH OF UNFILLED COLUMNS IN MAXX FUNCTION", len(node.unfilled_cols))
-                newboard = node.unmove(col)
+            newboard = node.move(col)
+            value = max(value, self.minfunction(newboard, depth-1, alpha, beta))
+            # print("LENGTHHH OF UNFILLED COLUMNS IN MAXX FUNCTION", len(node.unfilled_cols))
+            newboard = node.unmove(col)
             # print("LENGTHHH OF UNFILLED COLUMNS IN new board MAXX FUNCTION", len(newboard.unfilled_cols))
-                if value >= beta:
-                    return value
+            if value >= beta:
+                return value
             alpha = max(alpha, value)
         return value
     
     def minfunction(self, node, depth, alpha, beta):
         player = node.SwitchPlayer(node.to_play())
         node.turn = player
-        legalmoves = node.unfilled_cols
+        legalmoves = node.legal_moves()
         # print("List of legal moves ", legalmoves)
         if (depth==0) or len(node.unfilled_cols)==0:
             return self.eval_fn(node)
@@ -83,12 +82,13 @@ class Alpha_beta:
         for col in legalmoves:
             if node.is_terminal():
                 break
-            if not node.is_col_full(col):
-                newboard = node.move(col)
-                value = min(value, self.maxfunction(newboard, depth-1, alpha, beta))
-                newboard = node.unmove(col)
-                if value <= alpha:
-                    return value
+            # print("here")
+            newboard = node.move(col)
+            # print("here 2")
+            value = min(value, self.maxfunction(newboard, depth-1, alpha, beta))
+            newboard = node.unmove(col)
+            if value <= alpha:
+                return value
             beta = min(beta, value)
         return value
     
@@ -227,16 +227,16 @@ def play_against_MCTS(iterations):
     while True:
         # this needs to return a Node, same Node as what MCTS returns.
         # board = ab_tree.alpha_beta_search(board)
+        board = ab_tree.searching_function(board, 8) #Here is AI's move. Takes as input current table (board), depth and opponents mark. Output should be new gameboard with AI's move.
+        print("executed alpha beta")
+        board.see_board()
+        if (board.is_terminal()):
+            break
         for _ in range(iterations):
             mcts_tree.do_rollout(board)
         board = mcts_tree.choose(board)
         board.see_board()
         print("mcts executed")
-        if (board.is_terminal()):
-            break
-        board = ab_tree.searching_function(board, 8) #Here is AI's move. Takes as input current table (board), depth and opponents mark. Output should be new gameboard with AI's move.
-        print("executed alpha beta")
-        board.see_board()
         if (board.is_terminal()):
             break
 

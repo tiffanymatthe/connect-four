@@ -96,6 +96,25 @@ class Node():
         self.print_a_ndarray(coloured_board, row_sep="")
         print()
 
+
+    def legal_row(self, col):
+        stacks = [[x[i] for x in self.current_state] for i in range(self.num_col)] # This function checks stack of given column and return the row where you can draw mark. If the stack is full return -1
+        count_of_items = stacks[col].count(1) + stacks[col].count(0) # count of items in stack
+        if (count_of_items) < 6:
+            return (count_of_items)
+        else:
+            return -1
+
+    def legal_moves(self):
+        legal_moves_list = []
+        stacks = [[x[i] for x in self.current_state] for i in range(self.num_col)] 
+        order = [3,2,4,1,5,0,6]
+        for i in order:
+            if self.legal_row(i)!=-1:
+                legal_moves_list.append(i)
+        return legal_moves_list
+
+
     def is_col_full(self, col_num: int) -> bool:
         """
         Parameters
@@ -234,7 +253,7 @@ class Node():
 
     def unmove(self, col):
         new_board = self.get_copy()
-        new_board.current_state[new_board.unfilled_cols[col], col] = -1 # This function make a move and increases count of moves
+        new_board.current_state[new_board.unfilled_cols[col], col] = -1 # This function unmake a move and increases count of moves
         new_board.unfilled_cols[col] += 1
         return new_board
 
