@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
-import multiprocessing
 from Network import Network
 from NetworkTraining import NetworkTraining
 from C4Config import C4Config
@@ -12,6 +11,7 @@ from ReplayBuffer import ReplayBuffer
 from timeit import default_timer as timer
 import cProfile
 import pstats
+import tensorflow as tf
 
 from multiprocessing import Process
 from multiprocessing.managers import BaseManager
@@ -91,7 +91,7 @@ def profile_multiprocessing():
 
 def train_network():
     config = C4Config()
-    NetworkTraining.alphazero(config)
+    return NetworkTraining.alphazero(config)
 
 def print_summary():
     network = Network()
@@ -100,8 +100,10 @@ def print_summary():
 if __name__ == "__main__":
     # print_summary()
     # profile_inference()
-    final_network = train_network()
-    final_network.model.save("models/model_1")
+    # final_network = train_network()
+    # final_network.model.save("models/model_1")
     # profile_game()
     # test_shared_storage()
     # profile_multiprocessing()
+
+    model = tf.keras.models.load_model('models/model_1')

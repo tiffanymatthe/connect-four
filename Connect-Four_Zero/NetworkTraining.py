@@ -60,7 +60,6 @@ class NetworkTraining(object):
             game = NetworkTraining.play_game(config, network)
             replay_buffer.save_game(game)
             i += 1
-            print("Game {}".format(i))
 
     # Each game is produced by starting at the initial board position, then
     # repeatedly executing a Monte Carlo Tree Search to generate moves until the end
@@ -179,6 +178,7 @@ class NetworkTraining(object):
                                             config.momentum)
         for i in range(config.training_steps):
             if i % config.checkpoint_interval == 0:
+                print("At checkpoint {}/{}".format(i, config.training_steps))
                 storage.save_network(i, network)
             if replay_buffer.is_empty():
                 continue
