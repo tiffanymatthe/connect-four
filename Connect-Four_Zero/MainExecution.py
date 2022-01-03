@@ -100,7 +100,8 @@ def print_summary():
 if __name__ == "__main__":
     # print_summary()
     # profile_inference()
-    train_network()
+    final_network = train_network()
+    final_network.model.save("models/model_1")
     # profile_game()
     # test_shared_storage()
     # profile_multiprocessing()

@@ -21,11 +21,17 @@ class NetworkTraining(object):
         replay_buffer, storage = NetworkTraining.get_buffer_storage_from_base_manager(
             config)
 
+        processes = []
+
         for _ in range(config.num_actors):
-            NetworkTraining.launch_job(
+            p = NetworkTraining.launch_job(
                 NetworkTraining.run_selfplay, config, storage, replay_buffer)
+            processes.append(p)
 
         NetworkTraining.train_network(config, storage, replay_buffer)
+
+        for p in processes:
+            p.terminate()
 
         return storage.latest_network()
 
@@ -169,8 +175,8 @@ class NetworkTraining(object):
         boundaries.pop(0)
         learning_rate_fn = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
             boundaries, config.learning_rate_schedule.values())
-        optimizer = tf.compat.v1.train.MomentumOptimizer(learning_rate_fn,
-                                                         config.momentum)
+        optimizer = tf.keras.optimizers.SGD(learning_rate_fn,
+                                            config.momentum)
         for i in range(config.training_steps):
             if i % config.checkpoint_interval == 0:
                 storage.save_network(i, network)
@@ -183,9 +189,8 @@ class NetworkTraining(object):
         storage.save_network(config.training_steps, network)
 
     @staticmethod
-    def update_weights(optimizer: tf.compat.v1.train.Optimizer, network: Network, batch,
+    def update_weights(optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,
                        weight_decay: float):
-
         def loss_fcn():
             loss = 0
             mse = tf.keras.losses.MeanSquaredError(reduction="auto")
@@ -202,7 +207,7 @@ class NetworkTraining(object):
 
             return loss
 
-        optimizer.minimize(loss_fcn)
+        optimizer.minimize(loss_fcn, var_list=network.get_weights())
 
     @staticmethod
     def softmax_sample(d):
@@ -217,3 +222,4 @@ class NetworkTraining(object):
     def launch_job(f, *args):
         x = Process(target=f, args=args)
         x.start()
+        return x
