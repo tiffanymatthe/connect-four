@@ -188,15 +188,17 @@ class NetworkTraining(object):
             loss += (
                 mse(value, target_value).numpy() +
                 tf.nn.softmax_cross_entropy_with_logits(
-                    logits=policy_logits, labels=target_policy))
-
+                    logits=policy_logits, labels=target_policy))  
+        
+        var_list = []
         for weights in network.get_weights():
             loss += weight_decay * tf.nn.l2_loss(weights)
+            var_list.append(weights)
 
         print("LOSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS")
         print(loss)
 
-        optimizer.minimize(loss)
+        optimizer.minimize(loss, var_list)
 
     @staticmethod
     def softmax_sample(d):
