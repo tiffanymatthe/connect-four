@@ -81,6 +81,7 @@ class NetworkTraining(object):
         while not game.terminal() and len(game.history) < config.max_moves:
             action, root = NetworkTraining.run_mcts(config, game, network)
             game.apply(action)
+            game.see_board()
             game.store_search_statistics(root)
         return game
 
@@ -180,11 +181,11 @@ class NetworkTraining(object):
     def train_network(config: C4Config, storage: SharedStorage,
                       replay_buffer: ReplayBuffer):
         network = Network()
-        boundaries = list(config.learning_rate_schedule.keys())
-        boundaries.pop(0)
-        learning_rate_fn = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-            boundaries, config.learning_rate_schedule.values())
-        optimizer = tf.keras.optimizers.SGD(learning_rate_fn,
+        # boundaries = list(config.learning_rate_schedule.keys())
+        # boundaries.pop(0)
+        # learning_rate_fn = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+        #     boundaries, config.learning_rate_schedule.values())
+        optimizer = tf.compat.v1.train.MomentumOptimizer(config.learning_rate_schedule,
                                             config.momentum)
         while (replay_buffer.is_empty()): # sleep until there is something to do.
             time.sleep(5)
@@ -202,7 +203,7 @@ class NetworkTraining(object):
         storage.save_network(config.training_steps, network)
 
     @staticmethod
-    def update_weights(optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,
+    def update_weights(optimizer: tf.compat.v1.train.Optimizer, network: Network, batch,
                        weight_decay: float):
         def loss_fcn():
             loss = 0
@@ -219,7 +220,7 @@ class NetworkTraining(object):
                 loss += weight_decay * tf.nn.l2_loss(weights)
 
             return loss
-        optimizer.minimize(loss_fcn, var_list=network.get_weights())
+        optimizer.minimize(loss_fcn)
         print(f"{BColors.OKCYAN}Finished updating weights{BColors.ENDC}")
 
     @staticmethod
@@ -236,3 +237,8 @@ class NetworkTraining(object):
         x = Process(target=f, args=args)
         x.start()
         return x
+
+if __name__ == "__main__":
+    network = Network()
+    config = C4Config()
+    NetworkTraining.play_game(config, network)

@@ -11,6 +11,7 @@ from keras.layers.core import Dense
 from keras.layers import Flatten
 from keras.layers import Input
 import tensorflow as tf
+import numpy as np
 
 
 class Network(object):
@@ -113,7 +114,11 @@ class Network(object):
             "value_output": "mse", 
             "probability_output":"categorical_crossentropy"
         }
-        model.compile(optimizer='sgd', loss=losses)
+        losses_weights = {
+            'value_output': 0.5,
+            'probability_output': np.ones(7) / 7
+        }
+        model.compile(optimizer='sgd', loss=losses, loss_weights=losses_weights)
         return model
 
     def __get_model(self):
