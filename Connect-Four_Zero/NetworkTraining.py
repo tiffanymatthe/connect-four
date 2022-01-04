@@ -18,6 +18,13 @@ from multiprocessing import Process
 from multiprocessing.managers import BaseManager
 import random
 
+from keras.callbacks import CSVLogger
+from csv import writer
+import pytorch as torch
+import numpy as np
+import pandas as pd
+
+
 class NetworkTraining(object):
 
     @staticmethod
@@ -233,7 +240,19 @@ class NetworkTraining(object):
             for weights in network.get_weights():
                 loss += weight_decay * tf.nn.l2_loss(weights)
 
-            print(loss)
+            with open('losses/log_loss.csv', 'a', newline='') as f_object:  
+                # Pass the CSV  file object to the writer() function
+                writer_object = writer(f_object)
+                # Result - a writer object
+                # Pass the data in the list as an argument into the writerow() function
+                tf.cast(loss, tf.int32)
+                writer_object.writerow(loss)  
+                print("writing to csv file now")
+                # Close the file object
+                f_object.close()
+            
+            # csv_logger = CSVLogger('losses/log_loss.csv', append=True, separator=';')
+            print("Lossssss {}".format(loss))
 
             return loss
         optimizer.minimize(loss_fcn,var_list=network.get_weights())
