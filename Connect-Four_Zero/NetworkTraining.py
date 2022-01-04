@@ -261,8 +261,21 @@ class NetworkTraining(object):
         Returns softmax visit count and action.
         """
         # could add in temperature parameter if wanted
-        max_visits, _ = max(d, key=lambda item: item[0])
-        max_tuples = [item for item in d if item[0] == max_visits]
+        max_visits_one, _ = max(d, key=lambda item: item[0])
+        max_tuples_one = [item for item in d if item[0] == max_visits_one]
+
+        #finding the 2nd maximum tuples
+        remaining_tuples = [item for item in d if item[0] != max_visits_one]
+        max_visits_two, _ = max(remaining_tuples, key=lambda item: item[0])
+        max_tuples_two = [item for item in remaining_tuples if item[0] == max_visits_two]
+
+        #finding the 3rd maximum tuples
+        left_tuples = [item for item in remaining_tuples if item[0] != max_visits_two]
+        max_visits_three, _ = max(left_tuples, key=lambda item: item[0])
+        max_tuples_three = [item for item in left_tuples if item[0] == max_visits_three]
+
+        #compilation of all three maximum values into one list
+        max_tuples = max_tuples_one + max_tuples_two + max_tuples_three
         return random.choice(max_tuples)
 
     @staticmethod
