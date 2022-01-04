@@ -104,7 +104,7 @@ class DataGenerator(object):
         plane_1 = np.isin(state, current_player_colour)
         plane_2 = np.isin(state, not current_player_colour)
         plane_3 = np.ones((6, 7)) * current_player_colour
-        return np.stack((plane_1, plane_2, plane_3), axis=-1)
+        return np.dstack((plane_1, plane_2, plane_3))
 
     @staticmethod
     def get_current_player(state) -> int:

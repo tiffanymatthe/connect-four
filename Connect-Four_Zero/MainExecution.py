@@ -148,6 +148,7 @@ def play_against_model(model):
         if (board.is_terminal()):
             break
         image = DataGenerator.get_nn_input(board.current_state, board.turn)
+        print(np.moveaxis(image, -1, 0))
         value, policy = model(image[None], training=False)
         print("value: {}, policies: {}".format(value, policy))
         board = board.move(np.argmax(policy))
@@ -168,7 +169,7 @@ if __name__ == "__main__":
     # profile_multiprocessing()
 
     model=tf.keras.models.load_model('Connect-Four_Zero/models/model_3')
-    network = Network()
-    network.model = model
-    NetworkTraining.play_game(C4Config(), network)
-    # play_against_model(model)
+    # network = Network()
+    # network.model = model
+    # NetworkTraining.play_game(C4Config(), network)
+    play_against_model(model)
