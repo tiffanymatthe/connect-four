@@ -27,6 +27,7 @@ class NetworkTraining(object):
 
     @staticmethod
     def alphazero(config: C4Config):
+        tf.keras.backend.clear_session()
         replay_buffer, storage = NetworkTraining.get_buffer_storage_from_base_manager(
             config)
 
@@ -104,7 +105,9 @@ class NetworkTraining(object):
         NetworkTraining.evaluate(root, game, network)
         NetworkTraining.add_exploration_noise(config, root)
 
-        for _ in range(config.num_simulations):
+        for i in range(config.num_simulations):
+            # if i % 50 == 0:
+            #     print(i)
             node = root
             scratch_game = game.clone()
             search_path = [node]
@@ -133,15 +136,9 @@ class NetworkTraining(object):
 
     @staticmethod
     def select_child(config: C4Config, node: C4Node):
-        ucb_score, action, child = max((NetworkTraining.ucb_score(config, node, child), action, child)
+        _, action, child = max((NetworkTraining.ucb_score(config, node, child), action, child)
                                        for action, child in node.children.items())
-        children = []
-        for action, child in node.children.items():
-            if (NetworkTraining.ucb_score(config, node, child) == ucb_score):
-                children.append((action, child))
-
-        # print("OUTPUT of max function {}".format(random.choices(children)))
-        return random.choices(children)[0]
+        return action, child
 
     # The score for a node is based on its value, plus an exploration bonus based on
     # the prior.
@@ -263,11 +260,3 @@ class NetworkTraining(object):
         x = Process(target=f, args=args)
         x.start()
         return x
-
-
-if __name__ == "__main__":
-    network = Network()
-    config = C4Config()
-    game = C4Game()
-    print(network.inference(game.make_image(-1)))
-    # NetworkTraining.play_game(config, network)

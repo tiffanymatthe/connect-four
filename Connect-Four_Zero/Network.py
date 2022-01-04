@@ -42,11 +42,11 @@ class Network(object):
         return self.model.trainable_weights
 
     def clone_network(self):
-        """Clones the network with same weights and compiled model."""
+        """Clones the network with same weights. Only for prediction, so not compiled."""
         new = Network()
         new.model = tf.keras.models.clone_model(self.model)
-        new.model.build((self.height, self.width, 3))
-        new.model.compile(optimizer='sgd', loss=self.losses)
+        # new.model.build((self.height, self.width, 3))
+        # new.model.compile(optimizer='sgd', loss=self.losses)
         new.model.set_weights(self.model.get_weights())
 
         return new
@@ -114,7 +114,7 @@ class Network(object):
             "value_output": "mse", 
             "probability_output":"categorical_crossentropy"
         }
-        model.compile(optimizer='sgd', loss=losses)
+        model.compile(optimizer='sgd', loss=losses) # not even sure if this is needed
         return model
 
     def __get_model(self):

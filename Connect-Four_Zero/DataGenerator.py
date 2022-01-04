@@ -79,7 +79,7 @@ class DataGenerator(object):
         return empty_count > 1
 
     @staticmethod
-    def get_nn_input(state, current_player_colour):
+    def get_nn_input(state, current_player_colour, validate=False):
         """
         state: representation of connect-4 board, size 6 x 7. Only contains values -1, 0, and 1.
         -1 represents empty space, 0 and 1 represent player tokens.
@@ -95,12 +95,13 @@ class DataGenerator(object):
         Raises ValueError if state is an invalid game state or if current_player_colour is wrong.
         TODO: figure out if current_player_colour input is needed
         """
-        if not DataGenerator.validate_state(state):
-            DataGenerator.see_board(state)
-            raise ValueError("Invalid game state.")
-        if DataGenerator.get_current_player(state) != current_player_colour:
-            raise ValueError(
-                "Invalid player colour {}".format(current_player_colour))
+        if validate:
+            if not DataGenerator.validate_state(state):
+                DataGenerator.see_board(state)
+                raise ValueError("Invalid game state.")
+            if DataGenerator.get_current_player(state) != current_player_colour:
+                raise ValueError(
+                    "Invalid player colour {}".format(current_player_colour))
         plane_1 = np.isin(state, current_player_colour)
         plane_2 = np.isin(state, not current_player_colour)
         plane_3 = np.ones((6, 7)) * current_player_colour

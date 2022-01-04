@@ -155,7 +155,7 @@ class DataGeneratorTests(unittest.TestCase):
     def test_nn_input_game_empty_board(self):
         state = -np.ones((6, 7))
         current_player_colour = 1
-        stack = DataGenerator.get_nn_input(state, current_player_colour)
+        stack = DataGenerator.get_nn_input(state, current_player_colour, True)
         self.assertEqual(stack.shape, (6,7,3))
 
     def test_nn_input_game_invalid_state(self):
@@ -164,7 +164,7 @@ class DataGeneratorTests(unittest.TestCase):
         state[3, 3] = 0
         current_player_colour = 1
         with self.assertRaises(ValueError):
-            DataGenerator.get_nn_input(state, current_player_colour)
+            DataGenerator.get_nn_input(state, current_player_colour, True)
 
     def test_nn_input(self):
         state = np.array([[-1, -1, -1, -1, -1, -1, -1],
@@ -192,7 +192,7 @@ class DataGeneratorTests(unittest.TestCase):
 
         colour_layer = np.zeros((6, 7))
 
-        stack = DataGenerator.get_nn_input(state, current_player_colour)
+        stack = DataGenerator.get_nn_input(state, current_player_colour, True)
 
         # reformat to compare
         stack = np.moveaxis(stack, -1, 0)

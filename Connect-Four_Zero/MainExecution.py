@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import sys
 import os
-import pickle
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 dir_path = os.path.dirname(os.path.realpath(__file__))

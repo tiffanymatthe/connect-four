@@ -105,6 +105,7 @@ class C4Game(object):
         ])
 
     def make_image(self, state_index: int):
+        """Makes an image to feed into neural network. Validation of input is set to False."""
         return DataGenerator.get_nn_input(self.history[state_index], self.to_play(state_index))
 
     def make_target(self, state_index: int):
