@@ -222,7 +222,8 @@ class NetworkTraining(object):
             if replay_buffer.is_empty():
                 time.sleep(0.2)
                 continue
-            if i % (config.checkpoint_interval * 5) == 0:
+            if i % (config.checkpoint_interval * 3) == 0:
+                print("SAVED CURRENT NEURAL NETWORK MODEL")
                 network.model.save(f"models/{config.model_name}")
             batch = replay_buffer.sample_batch()
             NetworkTraining.update_weights(
