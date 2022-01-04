@@ -21,6 +21,7 @@ from C4Config import C4Config
 from NetworkTraining import NetworkTraining
 from Network import Network
 from DataGenerator import DataGenerator
+from Losses import Losses
 import numpy as np
 
 def time_game():
@@ -139,28 +140,6 @@ def get_player_move(board):
 
     return board
 
-def show_pickled_data(config: C4Config):
-    """
-    This method opens the pickle file and prints the data present in it. Previously, 
-    the commented out lines were used to see the individual entries. 
-
-    Now, it retrieves just the loss value from the tensor entries and 
-    stores it in a list. 
-    This list can be used to plot the data.
-    """
-    file = open('losses/loss.pickle', 'rb')
-    data = pickle.load(file)
-    # close the file
-    file.close()
-
-    print('Showing the pickled data:')
-    cnt = 0
-    for item in data:
-        print('The data ', cnt, ' is : ', item)
-        print('item 1 ', item.numpy())
-        config.final_loss_list.append(item.numpy())
-        cnt += 1
-
 def play_against_model(model):
     board = Node()
     board.see_board()
@@ -182,15 +161,12 @@ def play_against_model(model):
     print("Winner is {}: {}".format(winner, board.colors[winner]))
 
 if __name__ == "__main__":
-    config = C4Config()
-    # profile_inference()
+    model_name = 'model_1'
+    config = C4Config(model_name)
     final_network = train_network()
-    final_network.model.save("models/model_5")
-    show_pickled_data(config)
-    # print_summary()
-    # profile_game()
-    # test_shared_storage()
-    # profile_multiprocessing()
+    final_network.model.save(f"models/{model_name}")
+    losses = Losses(model_name)
+    losses.plot_losses()
 
     # model=tf.keras.models.load_model('models/model_3')
     # # # network = Network()

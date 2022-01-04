@@ -6,6 +6,7 @@ from Network import Network
 from C4Game import C4Game
 from C4Node import C4Node
 from BColors import BColors
+from Losses import Losses
 
 import math
 import random
@@ -19,11 +20,7 @@ from multiprocessing.managers import BaseManager
 import random
 
 from keras.callbacks import CSVLogger
-from csv import writer
-# import pytorch as torch
 import numpy as np
-import pickle 
-# import pandas as pd
 
 
 class NetworkTraining(object):
@@ -75,7 +72,8 @@ class NetworkTraining(object):
                     network = storage.latest_network()
                     break
                 except KeyError:
-                    print(f"{BColors.WARNING}Key Error when trying to retrieve latest network. Trying again.{BColors.ENDC}")
+                    print(
+                        f"{BColors.WARNING}Key Error when trying to retrieve latest network. Trying again.{BColors.ENDC}")
             game = NetworkTraining.play_game(config, network)
             replay_buffer.save_game(game)
             print("Finished game {} for process {}".format(i, id))
@@ -91,6 +89,7 @@ class NetworkTraining(object):
         while not game.terminal() and len(game.history) < config.max_moves:
             action, root = NetworkTraining.run_mcts(config, game, network)
             game.apply(action)
+            # print([child.value() for child in root.children.values()])
             game.store_search_statistics(root)
         return game
 
@@ -109,25 +108,21 @@ class NetworkTraining(object):
             node = root
             scratch_game = game.clone()
             search_path = [node]
-        
-        # print("Length of the search path after the for loop {}".format(len(search_path)))
 
-        while node.expanded():
-            action, node = NetworkTraining.select_child(config, node)
-            scratch_game.apply(action)
-            # print("node expansion and child picked {}".format(node))
-            search_path.append(node)
-            value = NetworkTraining.evaluate(node, scratch_game, network)
-            NetworkTraining.backpropagate(
-                search_path, value, scratch_game.to_play())
-        # print("Length of the search path after node expansion {}".format(len(search_path)))
+            while node.expanded():
+                action, node = NetworkTraining.select_child(config, node)
+                scratch_game.apply(action)
+                search_path.append(node)
+                value = NetworkTraining.evaluate(node, scratch_game, network)
+                NetworkTraining.backpropagate(
+                    search_path, value, scratch_game.to_play())
         return NetworkTraining.select_action(config, game, root), root
 
     @staticmethod
     def select_action(config: C4Config, game: C4Game, root: C4Node):
         visit_counts = [(child.visit_count, action)
                         for action, child in root.children.items()]
-        
+
         if len(game.history) < config.num_sampling_moves:
             _, action = NetworkTraining.softmax_sample(visit_counts)
         else:
@@ -139,12 +134,11 @@ class NetworkTraining(object):
     @staticmethod
     def select_child(config: C4Config, node: C4Node):
         ucb_score, action, child = max((NetworkTraining.ucb_score(config, node, child), action, child)
-                               for action, child in node.children.items())
+                                       for action, child in node.children.items())
         children = []
         for action, child in node.children.items():
             if (NetworkTraining.ucb_score(config, node, child) == ucb_score):
                 children.append((action, child))
-    
 
         # print("OUTPUT of max function {}".format(random.choices(children)))
         return random.choices(children)[0]
@@ -201,6 +195,7 @@ class NetworkTraining(object):
     @staticmethod
     def train_network(config: C4Config, storage: SharedStorage,
                       replay_buffer: ReplayBuffer):
+        losses = Losses()
         network = Network()
         boundaries = list(config.learning_rate_schedule.keys())
         boundaries.pop(0)
@@ -208,32 +203,30 @@ class NetworkTraining(object):
             boundaries, config.learning_rate_schedule.values())
         optimizer = tf.keras.optimizers.SGD(learning_rate_fn,
                                             config.momentum)
-        while (replay_buffer.get_buffer_size() < int(config.batch_size // 4)): # sleep until there is something to do.
+        # sleep until there is something to do.
+        while (replay_buffer.get_buffer_size() < int(config.batch_size // 4)):
             time.sleep(10)
         for i in range(config.training_steps):
-            # print(f"At training step {i}")
             if i % config.checkpoint_interval == 0:
-                print("{}At checkpoint {}/{}{}".format(BColors.OKBLUE, i, config.training_steps, BColors.ENDC))
-                print("Replay buffer size: {}".format(replay_buffer.get_buffer_size()))
+                print("{}At checkpoint {}/{}{}".format(BColors.OKBLUE,
+                      i, config.training_steps, BColors.ENDC))
+                print("Replay buffer size: {}".format(
+                    replay_buffer.get_buffer_size()))
                 storage.save_network(i, network)
             if replay_buffer.is_empty():
                 time.sleep(0.2)
                 continue
             batch = replay_buffer.sample_batch()
-            NetworkTraining.update_weights(config, 
-                optimizer, network, batch, config.weight_decay)
-        
-        #this method only runs once and after it has collected all the data, 
-        #including appending the loss tensors to the list, it will write that data to a file
-        file_to_write = open("losses/loss.pickle", "wb")
-        pickle.dump(config.list_of_losses, file_to_write)
-        print("successful dump")
-        
+            NetworkTraining.update_weights(config,
+                                           optimizer, network, batch, config.weight_decay, losses)
+
+        losses.save(f"losses_{config.model_name}")
+
         storage.save_network(config.training_steps, network)
 
     @staticmethod
     def update_weights(config: C4Config, optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,
-                       weight_decay: float):
+                       weight_decay: float, losses: Losses):
         def loss_fcn():
             loss = 0
             mse = tf.keras.losses.MeanSquaredError(reduction="auto")
@@ -247,13 +240,12 @@ class NetworkTraining(object):
 
             for weights in network.get_weights():
                 loss += weight_decay * tf.nn.l2_loss(weights)
-            
-            print("incoming print statement for length of loss lists")
-            config.list_of_losses.append(loss)
-            print(len(config.list_of_losses))
+
+            losses.save(loss)
+
             return loss
-        optimizer.minimize(loss_fcn,var_list=network.get_weights())
-        # print(f"{BColors.OKCYAN}Finished updating weights{BColors.ENDC}")
+
+        optimizer.minimize(loss_fcn, var_list=network.get_weights())
 
     @staticmethod
     def softmax_sample(d):
@@ -271,6 +263,7 @@ class NetworkTraining(object):
         x = Process(target=f, args=args)
         x.start()
         return x
+
 
 if __name__ == "__main__":
     network = Network()
