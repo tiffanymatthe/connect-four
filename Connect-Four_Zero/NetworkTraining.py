@@ -88,6 +88,7 @@ class NetworkTraining(object):
     def play_game(config: C4Config, network: Network):
         game = C4Game()
         while not game.terminal() and len(game.history) < config.max_moves:
+            print(len(game.history))
             action, root = NetworkTraining.run_mcts(config, game, network)
             game.apply(action)
             # print([child.value() for child in root.children.values()])
