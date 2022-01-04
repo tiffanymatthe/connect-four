@@ -19,7 +19,7 @@ class C4Config(object):
         self.pb_c_init = 1.25
 
         # Training
-        self.training_steps = int(50) # int(700e3)
+        self.training_steps = int(10) # int(700e3)
         self.checkpoint_interval = int(2) # int(1e3)
         self.window_size = int(100) # int(1e6)
         self.batch_size = 4096

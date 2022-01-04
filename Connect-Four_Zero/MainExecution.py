@@ -162,7 +162,7 @@ if __name__ == "__main__":
     # profile_inference()
     final_network = train_network()
     final_network.model.save("models/model_3")
-    print_summary()
+    # print_summary()
     # profile_game()
     # test_shared_storage()
     # profile_multiprocessing()
