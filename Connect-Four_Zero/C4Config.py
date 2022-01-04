@@ -4,7 +4,7 @@ class C4Config(object):
 
     def __init__(self):
         # Self-Play
-        self.num_actors = 3 # 5000 #10
+        self.num_actors =  10 # 5000 #100
         self.num_sampling_moves = 30
         self.max_moves = 42 + 1  # 512 for chess and shogi, 722 for Go.
         self.num_simulations = 600 # 800
@@ -19,7 +19,7 @@ class C4Config(object):
         self.pb_c_init = 1.25
 
         # Training
-        self.training_steps = int(50) # int(700e3) #int(500)
+        self.training_steps = int(500) # int(700e3) #int(500)
         self.checkpoint_interval = int(10) # int(1e3)
         self.window_size = int(100) # int(1e6)
         self.batch_size = 70 # 4096
