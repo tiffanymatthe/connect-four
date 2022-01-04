@@ -90,7 +90,6 @@ class NetworkTraining(object):
         while not game.terminal() and len(game.history) < config.max_moves:
             action, root = NetworkTraining.run_mcts(config, game, network)
             game.apply(action)
-            # game.see_board()
             game.store_search_statistics(root)
         return game
 
@@ -208,15 +207,16 @@ class NetworkTraining(object):
             boundaries, config.learning_rate_schedule.values())
         optimizer = tf.keras.optimizers.SGD(learning_rate_fn,
                                             config.momentum)
-        while (replay_buffer.is_empty()): # sleep until there is something to do.
-            time.sleep(5)
+        while (replay_buffer.get_buffer_size() < int(config.batch_size // 2)): # sleep until there is something to do.
+            time.sleep(10)
         for i in range(config.training_steps):
-            print(f"At training step {i}")
+            # print(f"At training step {i}")
             if i % config.checkpoint_interval == 0:
                 print("{}At checkpoint {}/{}{}".format(BColors.OKBLUE, i, config.training_steps, BColors.ENDC))
                 print("Replay buffer size: {}".format(replay_buffer.get_buffer_size()))
                 storage.save_network(i, network)
             if replay_buffer.is_empty():
+                time.sleep(0.2)
                 continue
             batch = replay_buffer.sample_batch()
             NetworkTraining.update_weights(
@@ -256,7 +256,7 @@ class NetworkTraining(object):
 
             return loss
         optimizer.minimize(loss_fcn,var_list=network.get_weights())
-        print(f"{BColors.OKCYAN}Finished updating weights{BColors.ENDC}")
+        # print(f"{BColors.OKCYAN}Finished updating weights{BColors.ENDC}")
 
     @staticmethod
     def softmax_sample(d):

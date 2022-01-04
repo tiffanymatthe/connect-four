@@ -172,4 +172,4 @@ if __name__ == "__main__":
     # # # network = Network()
     # # network.model = model
     # # NetworkTraining.play_game(C4Config(), network)
-    # play_against_model(model)
+    play_against_model(final_network.model)

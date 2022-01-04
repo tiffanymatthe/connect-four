@@ -66,8 +66,8 @@ class C4Game(object):
 
     def terminal_value(self, to_play):
         """Returns 1 if player to_play wins, 0 if tied, -1 if otherwise. Game needs to be terminal."""
-        if self.__winner == -100:
-            raise Exception("Run terminal() first to ensure game is terminal.")
+        if self.__winner == -100 and not self.terminal():
+            raise Exception("Game is not terminal.")
         if self.__winner == to_play:
             return 1
         if self.__winner == 0:
