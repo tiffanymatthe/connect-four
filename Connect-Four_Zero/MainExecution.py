@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import os
+import pickle
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -138,6 +139,27 @@ def get_player_move(board):
 
     return board
 
+def show_pickled_data(config: C4Config):
+    """
+    This method opens the pickle file and prints the data present in it. Previously, 
+    the commented out lines were used to see the individual entries. 
+
+    Now, it retrieves just the loss value from the tensor entries and 
+    stores it in a list. 
+    This list can be used to plot the data.
+    """
+    file = open('losses/loss.pickle', 'rb')
+    data = pickle.load(file)
+    # close the file
+    file.close()
+
+    print('Showing the pickled data:')
+    cnt = 0
+    for item in data:
+        print('The data ', cnt, ' is : ', item)
+        print('item 1 ', item.numpy())
+        config.final_loss_list.append(item.numpy())
+        cnt += 1
 
 def play_against_model(model):
     board = Node()
@@ -160,16 +182,18 @@ def play_against_model(model):
     print("Winner is {}: {}".format(winner, board.colors[winner]))
 
 if __name__ == "__main__":
+    config = C4Config()
     # profile_inference()
     final_network = train_network()
-    final_network.model.save("models/model_3")
+    final_network.model.save("models/model_5")
+    show_pickled_data(config)
     # print_summary()
     # profile_game()
     # test_shared_storage()
     # profile_multiprocessing()
 
-    # model=tf.keras.models.load_model('Connect-Four_Zero/models/model_3')
-    # # network = Network()
+    # model=tf.keras.models.load_model('models/model_3')
+    # # # network = Network()
     # # network.model = model
     # # NetworkTraining.play_game(C4Config(), network)
     # play_against_model(final_network.model)

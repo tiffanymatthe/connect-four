@@ -18,6 +18,14 @@ from multiprocessing import Process
 from multiprocessing.managers import BaseManager
 import random
 
+from keras.callbacks import CSVLogger
+from csv import writer
+# import pytorch as torch
+import numpy as np
+import pickle 
+# import pandas as pd
+
+
 class NetworkTraining(object):
 
     @staticmethod
@@ -212,12 +220,19 @@ class NetworkTraining(object):
                 time.sleep(0.2)
                 continue
             batch = replay_buffer.sample_batch()
-            NetworkTraining.update_weights(
+            NetworkTraining.update_weights(config, 
                 optimizer, network, batch, config.weight_decay)
+        
+        #this method only runs once and after it has collected all the data, 
+        #including appending the loss tensors to the list, it will write that data to a file
+        file_to_write = open("losses/loss.pickle", "wb")
+        pickle.dump(config.list_of_losses, file_to_write)
+        print("successful dump")
+        
         storage.save_network(config.training_steps, network)
 
     @staticmethod
-    def update_weights(optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,
+    def update_weights(config: C4Config, optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,
                        weight_decay: float):
         def loss_fcn():
             loss = 0
@@ -232,9 +247,10 @@ class NetworkTraining(object):
 
             for weights in network.get_weights():
                 loss += weight_decay * tf.nn.l2_loss(weights)
-
-            print(f"Current loss {loss}")
-
+            
+            print("incoming print statement for length of loss lists")
+            config.list_of_losses.append(loss)
+            print(len(config.list_of_losses))
             return loss
         optimizer.minimize(loss_fcn,var_list=network.get_weights())
         # print(f"{BColors.OKCYAN}Finished updating weights{BColors.ENDC}")

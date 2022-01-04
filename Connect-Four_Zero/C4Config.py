@@ -19,10 +19,12 @@ class C4Config(object):
         self.pb_c_init = 1.25
 
         # Training
-        self.training_steps = int(500) # int(700e3)
+        self.training_steps = int(500) # int(700e3) #int(500)
         self.checkpoint_interval = int(10) # int(1e3)
         self.window_size = int(100) # int(1e6)
         self.batch_size = 70 # 4096
+        self.list_of_losses = [] #list of tensors containing the loss values
+        self.final_loss_list = [] #list of float objects representing the loss values resulting from the training
 
         self.weight_decay = 1e-4
         self.momentum = 0.9
