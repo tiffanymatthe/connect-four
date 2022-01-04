@@ -16,9 +16,9 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
 class Network(object):
-    def __init__(self) -> None:
+    def __init__(self, model_name=None) -> None:
         # TODO: initialize model with uniform policy and value 0.5
-        self.model = self.__get_model()
+        self.model = self.__load_model(model_name) if model_name else self.__get_model()
         self.width = 7
         self.height = 6
         self.losses = {
@@ -123,6 +123,16 @@ class Network(object):
         width = 7
         height = 6
         return Network.compile_model(width, height)
+
+    def __load_model(self, model_name):
+        model = tf.keras.models.load_model(f'models/{model_name}')
+        losses = {
+            "value_output": "mse", 
+            "probability_output":"categorical_crossentropy"
+        }
+        model.compile(optimizer='sgd', loss=losses)
+        print("Loaded model.")
+        return model
 
     def print_model_summary(self):
         print(self.model.summary())

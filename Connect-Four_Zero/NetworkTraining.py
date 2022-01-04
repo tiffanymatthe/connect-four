@@ -30,10 +30,14 @@ import numpy as np
 class NetworkTraining(object):
 
     @staticmethod
-    def alphazero(config: C4Config):
+    def alphazero(config: C4Config, load=False):
         tf.keras.backend.clear_session()
         replay_buffer, storage = NetworkTraining.get_buffer_storage_from_base_manager(
             config)
+
+        if load:
+            network = Network(config.model_name)
+            storage.save_network(0, network)
 
         processes = []
 
@@ -43,7 +47,7 @@ class NetworkTraining(object):
             processes.append(p)
 
         losses = Losses()
-        NetworkTraining.train_network(config, storage, replay_buffer, losses)
+        NetworkTraining.train_network(config, storage, replay_buffer, losses, load)
 
         for p in processes:
             p.terminate()
@@ -201,8 +205,8 @@ class NetworkTraining(object):
 
     @staticmethod
     def train_network(config: C4Config, storage: SharedStorage,
-                      replay_buffer: ReplayBuffer, losses: Losses):
-        network = Network()
+                      replay_buffer: ReplayBuffer, losses: Losses, load=False):
+        network = network = Network(config.model_name) if load else Network()
         boundaries = list(config.learning_rate_schedule.keys())
         boundaries.pop(0)
         learning_rate_fn = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
@@ -225,7 +229,7 @@ class NetworkTraining(object):
                 continue
             if i % (config.checkpoint_interval * 3) == 0:
                 print("SAVED CURRENT NEURAL NETWORK MODEL")
-                network.model.save(f"models/{config.model_name}")
+                network.model.save(f"models/{config.model_name}_continued")
             batch = replay_buffer.sample_batch()
             NetworkTraining.update_weights(
                 optimizer, network, batch, config.weight_decay, losses)

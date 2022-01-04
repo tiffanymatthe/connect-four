@@ -106,9 +106,9 @@ def profile_multiprocessing():
     stats.dump_stats("profiles/multiprocessing_profile.prof")
 
 
-def train_network(model_name):
+def train_network(model_name, load=False):
     config = C4Config(model_name)
-    return NetworkTraining.alphazero(config)
+    return NetworkTraining.alphazero(config, load)
 
 
 def print_summary():
@@ -161,6 +161,6 @@ def play_against_model(model):
     print("Winner is {}: {}".format(winner, board.colors[winner]))
 
 if __name__ == "__main__":
-    model_name = 'model_2'
-    final_network = train_network(model_name)
-    final_network.model.save(f"models/{model_name}")
+    model_name = 'model_1'
+    final_network = train_network(model_name, load=True)
+    final_network.model.save(f"models/{model_name}_continued")
