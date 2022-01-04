@@ -8,6 +8,7 @@ from C4Node import C4Node
 from BColors import BColors
 
 import math
+import random
 import time
 import multiprocessing
 from typing import List
@@ -29,7 +30,6 @@ class NetworkTraining(object):
             p = NetworkTraining.launch_job(
                 NetworkTraining.run_selfplay, config, storage, replay_buffer)
             processes.append(p)
-            print("THE P VALUEEEE {}".format(p))
 
         NetworkTraining.train_network(config, storage, replay_buffer)
 
@@ -81,8 +81,7 @@ class NetworkTraining(object):
         game = C4Game()
         while not game.terminal() and len(game.history) < config.max_moves:
             action, root = NetworkTraining.run_mcts(config, game, network)
-            print("THHEEEE ACCTIIIONNNNN {}".format(action))
-            game.apply(action)
+            # game.apply(action)
             game.see_board()
             game.store_search_statistics(root)
         return game
@@ -106,6 +105,7 @@ class NetworkTraining(object):
         while node.expanded():
             action, node = NetworkTraining.select_child(config, node)
             scratch_game.apply(action)
+            scratch_game.see_board()
             search_path.append(node)
             value = NetworkTraining.evaluate(node, scratch_game, network)
             NetworkTraining.backpropagate(
@@ -229,10 +229,12 @@ class NetworkTraining(object):
     def softmax_sample(d):
         """
         d: list of tuples (visit_count, associated action)
-        Returns max visit count and action.
+        Returns softmax visit count and action.
         """
         # could add in temperature parameter if wanted
-        return max(d, key=lambda item: item[0])
+        max_visits, _ = max(d, key=lambda item: item[0])
+        max_tuples = [item for item in d if item[0] == max_visits]
+        return random.choice(max_tuples)
 
     @staticmethod
     def launch_job(f, *args):
