@@ -161,15 +161,6 @@ def play_against_model(model):
     print("Winner is {}: {}".format(winner, board.colors[winner]))
 
 if __name__ == "__main__":
-    model_name = 'model_1'
-    # config = C4Config(model_name)
+    model_name = 'model_2'
     final_network = train_network(model_name)
     final_network.model.save(f"models/{model_name}")
-    # losses = Losses(model_name)
-    # losses.plot_losses()
-
-    # model=tf.keras.models.load_model('models/model_3')
-    # # # network = Network()
-    # # network.model = model
-    # # NetworkTraining.play_game(C4Config(), network)
-    # play_against_model(final_network.model)

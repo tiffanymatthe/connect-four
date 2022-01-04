@@ -135,10 +135,11 @@ class NetworkTraining(object):
         visit_counts = [(child.visit_count, action)
                         for action, child in root.children.items()]
 
-        if len(game.history) < config.num_sampling_moves:
-            _, action = NetworkTraining.softmax_sample(visit_counts)
-        else:
-            _, action = max(visit_counts)
+        _, action = max(visit_counts)
+        # if len(game.history) < config.num_sampling_moves:
+        #     _, action = NetworkTraining.softmax_sample(visit_counts)
+        # else:
+        #     _, action = max(visit_counts)
         return action
 
     # Select the child with the highest UCB score.
