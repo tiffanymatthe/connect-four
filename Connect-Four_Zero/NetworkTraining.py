@@ -88,14 +88,12 @@ class NetworkTraining(object):
     def play_game(config: C4Config, network: Network):
         game = C4Game()
         i = 0
-        print("Game progress: ")
         while not game.terminal() and len(game.history) < config.max_moves:
             sys.stdout.write('\r')
             sys.stdout.write("[{:{}}] {:.1f}%".format("="*i, config.max_moves-1, (100/(config.max_moves-1)*i)))
             sys.stdout.flush()
             action, root = NetworkTraining.run_mcts(config, game, network)
             game.apply(action)
-            # print([child.value() for child in root.children.values()])
             game.store_search_statistics(root)
             i += 1
         return game
