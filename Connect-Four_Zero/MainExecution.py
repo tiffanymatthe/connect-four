@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import sys
 import os
+import pickle
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -138,6 +139,19 @@ def get_player_move(board):
 
     return board
 
+def show_pickled_data():
+    file = open('losses/loss.pickle', 'rb')
+    # dump information to that file
+    data = pickle.load(file)
+    # close the file
+    file.close()
+
+    print('Showing the pickled data:')
+    cnt = 0
+    for item in data:
+        print(len(item))
+        print('The data ', cnt, ' is : ', item)
+        cnt += 1
 
 def play_against_model(model):
     board = Node()
@@ -161,8 +175,9 @@ def play_against_model(model):
 
 if __name__ == "__main__":
     # profile_inference()
-    final_network = train_network()
-    final_network.model.save("models/model_4")
+    # final_network = train_network()
+    # final_network.model.save("models/model_4")
+    show_pickled_data()
     # print_summary()
     # profile_game()
     # test_shared_storage()
