@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
 from C4Config import C4Config
 from Network import Network
