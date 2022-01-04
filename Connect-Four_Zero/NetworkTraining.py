@@ -200,7 +200,7 @@ class NetworkTraining(object):
             boundaries, config.learning_rate_schedule.values())
         optimizer = tf.keras.optimizers.SGD(learning_rate_fn,
                                             config.momentum)
-        while (replay_buffer.get_buffer_size() < int(config.batch_size // 2)): # sleep until there is something to do.
+        while (replay_buffer.get_buffer_size() < int(config.batch_size // 4)): # sleep until there is something to do.
             time.sleep(10)
         for i in range(config.training_steps):
             # print(f"At training step {i}")
@@ -233,7 +233,7 @@ class NetworkTraining(object):
             for weights in network.get_weights():
                 loss += weight_decay * tf.nn.l2_loss(weights)
 
-            print(f"Current loss{loss}")
+            print(f"Current loss {loss}")
 
             return loss
         optimizer.minimize(loss_fcn,var_list=network.get_weights())

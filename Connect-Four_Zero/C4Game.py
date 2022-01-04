@@ -108,7 +108,7 @@ class C4Game(object):
         return DataGenerator.get_nn_input(self.history[state_index], self.to_play(state_index))
 
     def make_target(self, state_index: int):
-        return (self.terminal_value(state_index % 2),
+        return (self.terminal_value(self.to_play(state_index)),
             self.child_visits[state_index])
 
     def to_play(self, state_index=None):
@@ -213,11 +213,11 @@ class C4Game(object):
         print('    ' + '―' * 20)
         print('    ' + ' ' + col_axis)
 
-    def see_board(self):
+    def see_board(self, state_index=None):
         """
         Display Board. 'o' represents player 0, 'x' represents player 1, '-' represents an empty space.
         """
-        display_board = self.history[-1]
+        display_board = self.history[state_index] if state_index else self.history[-1]
         coloured_board = np.vectorize(
             self.get_color_coded_background)(display_board)
         self.print_a_ndarray(coloured_board, row_sep="")
