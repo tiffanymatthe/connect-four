@@ -220,12 +220,18 @@ class NetworkTraining(object):
                 time.sleep(0.2)
                 continue
             batch = replay_buffer.sample_batch()
-            NetworkTraining.update_weights(
+            NetworkTraining.update_weights(config, 
                 optimizer, network, batch, config.weight_decay)
+        
+        #this method only runs once and after it has collected all the data, 
+        #including appending the loss tensors to the list, it will write that data to a file
+        file_to_write = open("losses/loss.pickle", "wb")
+        pickle.dump(config.list_of_losses, file_to_write)
+        print("successful dump")
         storage.save_network(config.training_steps, network)
 
     @staticmethod
-    def update_weights(optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,
+    def update_weights(config: C4Config, optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,
                        weight_decay: float):
         def loss_fcn():
             loss = 0
@@ -241,11 +247,14 @@ class NetworkTraining(object):
             for weights in network.get_weights():
                 loss += weight_decay * tf.nn.l2_loss(weights)
             
-            print("string value of loss" + str(loss))
-            loss_dictionary = {"loss": str(loss)}
-            file_to_write = open("losses/loss.pickle", "wb")
-            pickle.dump(loss_dictionary, file_to_write)
-            print("Lossssss {}".format(loss))
+            print("incoming print statement for length of loss lists")
+            config.list_of_losses.append(loss)
+            print(len(config.list_of_losses))
+            # to_Write = tf.slice(loss, 0, 1)
+            # print(str(to_Write))
+            # file_to_write = open("losses/loss.pickle", "wb")
+            # pickle.dump(self.loss_list, file_to_write)
+            # print("Lossssss {}".format(self.loss_list))
 
             return loss
         optimizer.minimize(loss_fcn,var_list=network.get_weights())

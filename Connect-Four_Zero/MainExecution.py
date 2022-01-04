@@ -139,9 +139,16 @@ def get_player_move(board):
 
     return board
 
-def show_pickled_data():
+def show_pickled_data(config: C4Config):
+    """
+    This method opens the pickle file and prints the data present in it. Previously, 
+    the commented out lines were used to see the individual entries. 
+
+    Now, it retrieves just the loss value from the tensor entries and 
+    stores it in a list. 
+    This list can be used to plot the data.
+    """
     file = open('losses/loss.pickle', 'rb')
-    # dump information to that file
     data = pickle.load(file)
     # close the file
     file.close()
@@ -149,8 +156,9 @@ def show_pickled_data():
     print('Showing the pickled data:')
     cnt = 0
     for item in data:
-        print(len(item))
         print('The data ', cnt, ' is : ', item)
+        print('item 1 ', item.numpy())
+        config.final_loss_list.append(item.numpy())
         cnt += 1
 
 def play_against_model(model):
@@ -174,10 +182,11 @@ def play_against_model(model):
     print("Winner is {}: {}".format(winner, board.colors[winner]))
 
 if __name__ == "__main__":
+    config = C4Config()
     # profile_inference()
-    # final_network = train_network()
-    # final_network.model.save("models/model_4")
-    show_pickled_data()
+    final_network = train_network()
+    final_network.model.save("models/model_5")
+    show_pickled_data(config)
     # print_summary()
     # profile_game()
     # test_shared_storage()
