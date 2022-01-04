@@ -28,8 +28,4 @@ class ReplayBuffer(object):
             size=min(self.batch_size, self.get_buffer_size()),
             p=[len(g.history) / move_sum for g in self.buffer])
         game_pos = [(g, np.random.randint(len(g.history))) for g in games]
-        for game, i in game_pos:
-            game.see_board(i)
-            print(game.make_target(i))
-        time.sleep(10)
         return [(g.make_image(i), g.make_target(i)) for (g, i) in game_pos]

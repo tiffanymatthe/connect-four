@@ -164,8 +164,8 @@ if __name__ == "__main__":
     config = C4Config(model_name)
     final_network = train_network()
     final_network.model.save(f"models/{model_name}")
-    losses = Losses(model_name)
-    losses.plot_losses()
+    # losses = Losses(model_name)
+    # losses.plot_losses()
 
     # model=tf.keras.models.load_model('models/model_3')
     # # # network = Network()

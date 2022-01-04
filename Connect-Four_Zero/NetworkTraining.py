@@ -38,10 +38,13 @@ class NetworkTraining(object):
                 NetworkTraining.run_selfplay, config, storage, replay_buffer)
             processes.append(p)
 
-        NetworkTraining.train_network(config, storage, replay_buffer)
+        losses = Losses()
+        NetworkTraining.train_network(config, storage, replay_buffer, losses)
 
         for p in processes:
             p.terminate()
+
+        losses.save(f"losses_{config.model_name}")
 
         return storage.latest_network()
 
@@ -193,8 +196,7 @@ class NetworkTraining(object):
 
     @staticmethod
     def train_network(config: C4Config, storage: SharedStorage,
-                      replay_buffer: ReplayBuffer):
-        losses = Losses()
+                      replay_buffer: ReplayBuffer, losses: Losses):
         network = Network()
         boundaries = list(config.learning_rate_schedule.keys())
         boundaries.pop(0)
@@ -203,7 +205,7 @@ class NetworkTraining(object):
         optimizer = tf.keras.optimizers.SGD(learning_rate_fn,
                                             config.momentum)
         # sleep until there is something to do.
-        while (replay_buffer.get_buffer_size() < int(config.batch_size // 4)):
+        while (replay_buffer.get_buffer_size() < 3):
             time.sleep(10)
         for i in range(config.training_steps):
             if i % config.checkpoint_interval == 0:
@@ -212,14 +214,13 @@ class NetworkTraining(object):
                 print("Replay buffer size: {}".format(
                     replay_buffer.get_buffer_size()))
                 storage.save_network(i, network)
+                losses.save(f"losses_{config.model_name}")
             if replay_buffer.is_empty():
                 time.sleep(0.2)
                 continue
             batch = replay_buffer.sample_batch()
             NetworkTraining.update_weights(
                 optimizer, network, batch, config.weight_decay, losses)
-
-        losses.save(f"losses_{config.model_name}")
 
         storage.save_network(config.training_steps, network)
 
@@ -240,7 +241,7 @@ class NetworkTraining(object):
             for weights in network.get_weights():
                 loss += weight_decay * tf.nn.l2_loss(weights)
 
-            losses.save(loss)
+            losses.add_loss(loss)
 
             return loss
 
