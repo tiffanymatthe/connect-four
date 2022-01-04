@@ -18,8 +18,8 @@ import tensorflow as tf
 from multiprocessing import Process
 from multiprocessing.managers import BaseManager
 import random
+import sys
 
-from keras.callbacks import CSVLogger
 import numpy as np
 
 
@@ -87,12 +87,17 @@ class NetworkTraining(object):
     @staticmethod
     def play_game(config: C4Config, network: Network):
         game = C4Game()
+        i = 0
+        print("Game progress: ")
         while not game.terminal() and len(game.history) < config.max_moves:
-            print(len(game.history))
+            sys.stdout.write('\r')
+            sys.stdout.write("[{:{}}] {:.1f}%".format("="*i, config.max_moves-1, (100/(config.max_moves-1)*i)))
+            sys.stdout.flush()
             action, root = NetworkTraining.run_mcts(config, game, network)
             game.apply(action)
             # print([child.value() for child in root.children.values()])
             game.store_search_statistics(root)
+            i += 1
         return game
 
     # Core Monte Carlo Tree Search algorithm.
@@ -107,8 +112,6 @@ class NetworkTraining(object):
         NetworkTraining.add_exploration_noise(config, root)
 
         for i in range(config.num_simulations):
-            # if i % 50 == 0:
-            #     print(i)
             node = root
             scratch_game = game.clone()
             search_path = [node]
@@ -138,7 +141,7 @@ class NetworkTraining(object):
     @staticmethod
     def select_child(config: C4Config, node: C4Node):
         _, action, child = max((NetworkTraining.ucb_score(config, node, child), action, child)
-                                       for action, child in node.children.items())
+                               for action, child in node.children.items())
         return action, child
 
     # The score for a node is based on its value, plus an exploration bonus based on
@@ -215,15 +218,15 @@ class NetworkTraining(object):
                 time.sleep(0.2)
                 continue
             batch = replay_buffer.sample_batch()
-            NetworkTraining.update_weights(config,
-                                           optimizer, network, batch, config.weight_decay, losses)
+            NetworkTraining.update_weights(
+                optimizer, network, batch, config.weight_decay, losses)
 
         losses.save(f"losses_{config.model_name}")
 
         storage.save_network(config.training_steps, network)
 
     @staticmethod
-    def update_weights(config: C4Config, optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,
+    def update_weights(optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,
                        weight_decay: float, losses: Losses):
         def loss_fcn():
             loss = 0
