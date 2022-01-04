@@ -83,7 +83,7 @@ class NetworkTraining(object):
         while not game.terminal() and len(game.history) < config.max_moves:
             action, root = NetworkTraining.run_mcts(config, game, network)
             game.apply(action)
-            # game.see_board()
+            game.see_board()
             game.store_search_statistics(root)
         return game
 

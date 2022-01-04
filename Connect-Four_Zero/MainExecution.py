@@ -160,12 +160,15 @@ def play_against_model(model):
 
 if __name__ == "__main__":
     # profile_inference()
-    final_network = train_network()
-    final_network.model.save("models/model_3")
+    # final_network = train_network()
+    # final_network.model.save("models/model_3")
     # print_summary()
     # profile_game()
     # test_shared_storage()
     # profile_multiprocessing()
 
-    # model=tf.keras.models.load_model('models/model_2')
+    model=tf.keras.models.load_model('Connect-Four_Zero/models/model_3')
+    network = Network()
+    network.model = model
+    NetworkTraining.play_game(C4Config(), network)
     # play_against_model(model)
