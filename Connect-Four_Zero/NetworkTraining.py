@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 from C4Config import C4Config
 from SharedStorage import SharedStorage
 from ReplayBuffer import ReplayBuffer
@@ -15,6 +18,7 @@ import multiprocessing
 from typing import List
 import numpy as np
 import tensorflow as tf
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 from multiprocessing import Process
 from multiprocessing.managers import BaseManager
 import random
@@ -90,15 +94,15 @@ class NetworkTraining(object):
     @staticmethod
     def play_game(config: C4Config, network: Network):
         game = C4Game()
-        i = 0
+        # i = 0
         while not game.terminal() and len(game.history) < config.max_moves:
-            sys.stdout.write('\r')
-            sys.stdout.write("[{:{}}] {:.1f}%".format("="*i, config.max_moves-1, (100/(config.max_moves-1)*i)))
-            sys.stdout.flush()
+            # sys.stdout.write('\r')
+            # sys.stdout.write("[{:{}}] {:.1f}%".format("="*i, config.max_moves-1, (100/(config.max_moves-1)*i)))
+            # sys.stdout.flush()
             action, root = NetworkTraining.run_mcts(config, game, network)
             game.apply(action)
             game.store_search_statistics(root)
-            i += 1
+            # i += 1
         return game
 
     # Core Monte Carlo Tree Search algorithm.
@@ -218,6 +222,9 @@ class NetworkTraining(object):
             if replay_buffer.is_empty():
                 time.sleep(0.2)
                 continue
+            if i % (config.checkpoint_interval * 3) == 0:
+                print("SAVED CURRENT NEURAL NETWORK MODEL")
+                network.model.save(f"models/{config.model_name}")
             batch = replay_buffer.sample_batch()
             NetworkTraining.update_weights(
                 optimizer, network, batch, config.weight_decay, losses)

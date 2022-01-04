@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
 from multiprocessing.managers import BaseManager
 from multiprocessing import Process
 import tensorflow as tf
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 import pstats
 import cProfile
 from timeit import default_timer as timer
@@ -105,8 +106,8 @@ def profile_multiprocessing():
     stats.dump_stats("profiles/multiprocessing_profile.prof")
 
 
-def train_network():
-    config = C4Config()
+def train_network(model_name):
+    config = C4Config(model_name)
     return NetworkTraining.alphazero(config)
 
 
@@ -161,8 +162,8 @@ def play_against_model(model):
 
 if __name__ == "__main__":
     model_name = 'model_1'
-    config = C4Config(model_name)
-    final_network = train_network()
+    # config = C4Config(model_name)
+    final_network = train_network(model_name)
     final_network.model.save(f"models/{model_name}")
     # losses = Losses(model_name)
     # losses.plot_losses()
