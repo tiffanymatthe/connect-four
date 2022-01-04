@@ -114,11 +114,7 @@ class Network(object):
             "value_output": "mse", 
             "probability_output":"categorical_crossentropy"
         }
-        losses_weights = {
-            'value_output': 0.5,
-            'probability_output': np.ones(7) / 7
-        }
-        model.compile(optimizer='sgd', loss=losses, loss_weights=losses_weights)
+        model.compile(optimizer='sgd', loss=losses)
         return model
 
     def __get_model(self):

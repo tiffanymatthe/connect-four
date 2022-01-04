@@ -83,7 +83,7 @@ class NetworkTraining(object):
         while not game.terminal() and len(game.history) < config.max_moves:
             action, root = NetworkTraining.run_mcts(config, game, network)
             game.apply(action)
-            game.see_board()
+            # game.see_board()
             game.store_search_statistics(root)
         return game
 
@@ -233,6 +233,8 @@ class NetworkTraining(object):
             for weights in network.get_weights():
                 loss += weight_decay * tf.nn.l2_loss(weights)
 
+            print(loss)
+
             return loss
         optimizer.minimize(loss_fcn,var_list=network.get_weights())
         print(f"{BColors.OKCYAN}Finished updating weights{BColors.ENDC}")
@@ -257,4 +259,6 @@ class NetworkTraining(object):
 if __name__ == "__main__":
     network = Network()
     config = C4Config()
-    NetworkTraining.play_game(config, network)
+    game = C4Game()
+    print(network.inference(game.make_image(-1)))
+    # NetworkTraining.play_game(config, network)
