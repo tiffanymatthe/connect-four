@@ -206,7 +206,7 @@ class NetworkTraining(object):
                                                step, config.training_steps, BColors.ENDC))
         print("Replay buffer size: {}".format(
             replay_buffer.get_buffer_size()))
-        storage.save_network(step, network)
+        storage.save_network(step, network, config)
         losses.save(f"losses_{config.model_name}")
         losses.print_losses()
         network.cnn.write(config.model_name)
@@ -238,7 +238,7 @@ class NetworkTraining(object):
                 optimizer, network, batch, config.weight_decay, losses)
             NetworkTraining.wait_for_training_data(initial_buffer_size, replay_buffer, config)
 
-        storage.save_network(config.training_steps, network)
+        storage.save_network(config.training_steps, network, config)
 
     @staticmethod
     def update_weights(optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,

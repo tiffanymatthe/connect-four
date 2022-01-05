@@ -9,8 +9,8 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
 class Network(object):
-    def __init__(self, config: C4Config, clone=False) -> None:
-        self.cnn = Residual_CNN(config) if not clone else None
+    def __init__(self, config: C4Config, model=None) -> None:
+        self.cnn = Residual_CNN(config, model) if model else Residual_CNN(config)
         self.width = 7
         self.height = 6
 
@@ -30,12 +30,10 @@ class Network(object):
         # https://github.com/google/prettytensor/issues/6
         return self.cnn.model.trainable_weights
 
-    def clone_network(self):
+    def clone_network(self, config):
         """Clones the network with same weights. Only for prediction, so not compiled."""
-        new = Network(0,True)
-        new.model = tf.keras.models.clone_model(self.cnn.model)
-        new.model.set_weights(self.cnn.model.get_weights())
-
+        new = Network(config, tf.keras.models.clone_model(self.cnn.model))
+        new.cnn.model.set_weights(self.cnn.model.get_weights())
         return new
 
     def print_model_summary(self):

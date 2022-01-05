@@ -20,9 +20,9 @@ class SharedStorage(object):
             except KeyError:
                 print(f"{BColors.WARNING}Key Error when trying to retrieve latest network. Trying again.{BColors.ENDC}")
 
-    def save_network(self, step: int, network: Network):
+    def save_network(self, step: int, network: Network, config: C4Config):
         with self.mutex:
-            self._networks[step] = network.clone_network()
+            self._networks[step] = network.clone_network(config)
 
     def get_num_networks(self):
         return len(self._networks)

@@ -27,11 +27,11 @@ class Gen_Model():
 
 
 class Residual_CNN(Gen_Model):
-    def __init__(self, config: C4Config):
+    def __init__(self, config: C4Config, model=None):
         Gen_Model.__init__(self, config.input_shape, config.output_policy_shape)
         self.hidden_layers = config.hidden_layers
         self.num_layers = len(self.hidden_layers)
-        self.model = self._build_model()
+        self.model = model if model else self._build_model()
 
     def residual_layer(self, input_block, filters, kernel_size):
 
