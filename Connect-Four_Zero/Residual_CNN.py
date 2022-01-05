@@ -5,7 +5,7 @@ import logging
 logging.disable(logging.WARNING)
 from C4Config import C4Config
 from Softmax_Loss import softmax_cross_entropy_with_logits 
-from keras.optimizers import SGD
+from tensorflow.keras.optimizers import SGD
 from keras import regularizers
 
 import tensorflow as tf
@@ -35,23 +35,19 @@ class Residual_CNN(Gen_Model):
         self.hidden_layers = config.hidden_layers
         self.reg_const = config.weight_decay
         self.num_layers = len(self.hidden_layers)
-        self.model = model if model else self._build_model()
-
-        self.learning_rate = config.learning_rate_schedule
-        self.MOMENTUM = config.momentum
+        self.model = model if model else self._build_model(config)
 
     def residual_layer(self, input_block, filters, kernel_size):
 
         x = self.conv_layer(input_block, filters, kernel_size)
 
         x = Conv2D(
-            filters=filters, kernel_size=kernel_size, padding='same', use_bias=False, activation='linear'
-        )(x)
+            filters=filters, kernel_size=kernel_size, padding='same', 
+            use_bias=False, activation='linear', 
+            kernel_regularizer = regularizers.l2(self.reg_const))(x)
 
         x = BatchNormalization(axis=-1)(x)
-
         x = add([input_block, x])
-
         x = LeakyReLU()(x)
 
         return (x)
@@ -59,9 +55,8 @@ class Residual_CNN(Gen_Model):
     def conv_layer(self, x, filters, kernel_size):
 
         x = Conv2D(
-            filters=filters, kernel_size=kernel_size, padding='same', use_bias=False, activation='linear'
-        )(x)
-
+            filters=filters, kernel_size=kernel_size, padding='same', 
+            use_bias=False, activation='linear')(x)
         x = BatchNormalization(axis=-1)(x)
         x = LeakyReLU()(x)
 
@@ -109,12 +104,13 @@ class Residual_CNN(Gen_Model):
         return tf.keras.optimizers.schedules.PiecewiseConstantDecay(
             boundaries, config.learning_rate_schedule.values())
 
-    def _build_model(self):
+    def _build_model(self, config:C4Config):
 
         main_input = Input(shape=self.input_dim, name='main_input')
 
         x = self.conv_layer(
-            main_input, self.hidden_layers[0]['filters'], self.hidden_layers[0]['kernel_size'])
+            main_input, self.hidden_layers[0]['filters'], 
+            self.hidden_layers[0]['kernel_size'])
 
         if len(self.hidden_layers) > 1:
             for h in self.hidden_layers[1:]:
@@ -128,7 +124,8 @@ class Residual_CNN(Gen_Model):
             "value_head": "mse", 
             "policy_head": softmax_cross_entropy_with_logits
         }
-        opt = SGD(lr=self.learning_rate, momentum = self.MOMENTUM),	
+        opt = SGD(learning_rate = self.get_learning_rate_fn(config), 
+                momentum = config.momentum),	
         model.compile(loss = losses, 
                     optimizer = opt, 
                     loss_weights = {'value_head': 0.5, 'policy_head': 0.5}) #not sure where these values come from tho?
