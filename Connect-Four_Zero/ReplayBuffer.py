@@ -29,3 +29,15 @@ class ReplayBuffer(object):
             p=[len(g.history) / move_sum for g in self.buffer])
         game_pos = [(g, np.random.randint(len(g.history))) for g in games]
         return [(g.make_image(i), g.make_target(i)) for (g, i) in game_pos]
+
+    def see_samples(self):
+        # Sample uniformly across positions.
+        move_sum = float(sum(len(g.history) for g in self.buffer))
+        games = np.random.choice(
+            self.buffer,
+            size=min(self.batch_size, self.get_buffer_size() * 15),
+            p=[len(g.history) / move_sum for g in self.buffer])
+        game_pos = [(g, np.random.randint(len(g.history))) for g in games]
+        for (g, i) in game_pos:
+            g.see_board(i)
+            print(g.make_target(i))

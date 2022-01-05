@@ -2,6 +2,7 @@
 from Network import Network
 from multiprocessing import Lock
 from BColors import BColors
+from C4Config import C4Config
 
 class SharedStorage(object):
     def __init__(self):
@@ -28,5 +29,4 @@ class SharedStorage(object):
 
 
 def make_uniform_network() -> Network:
-    # TODO: should have weights which give uniform policy and value 0.5
-    return Network()
+    return Network(C4Config())

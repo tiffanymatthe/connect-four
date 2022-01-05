@@ -6,17 +6,22 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
 import numpy as np
 from Losses import Losses
+from Network import Network
 from DataGenerator import DataGenerator
 from NetworkTraining import NetworkTraining
 from C4Config import C4Config
+from C4Game import C4Game
+from SharedStorage import SharedStorage
 from Node import Node
 import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+import pstats
+import cProfile
 
 
-def train_network(model_name, load=False):
+def train_network(model_name):
     config = C4Config(model_name)
-    return NetworkTraining.alphazero(config, load)
+    return NetworkTraining.alphazero(config)
 
 
 def get_int_input(message):
@@ -64,12 +69,24 @@ def play_against_model(model):
     winner = board.get_winner()
     print("Winner is {}: {}".format(winner, board.colors[winner]))
 
+def profile_mcts():
+    config = C4Config()
+    game = C4Game()
+    storage = SharedStorage()
+    network = storage.latest_network()
+    with cProfile.Profile() as pr:
+        NetworkTraining.run_mcts(config, game, network)
+    stats = pstats.Stats(pr)
+    stats.sort_stats(pstats.SortKey.TIME)
+    stats.dump_stats("profiles/mcts_profile.prof")
+
 
 if __name__ == "__main__":
-    model_name = 'model_4'
-    final_network = train_network(model_name)
-    final_network.model.save(f"models/{model_name}")
-    # model = tf.keras.models.load_model("models/model_3")
+    version = '1'
+    final_network = train_network(version)
+    final_network.cnn.write(version)
+    # # model = tf.keras.models.load_model("models/model_3")
+    # model = Network(C4Config()).cnn.model
     # play_against_model(model)
-    losses = Losses('losses_model_4')
-    losses.plot_losses()
+    # losses = Losses(f'losses_{version}')
+    # losses.plot_losses()

@@ -7,10 +7,9 @@ from multiprocessing import Process
 import tensorflow as tf
 import numpy as np
 from typing import List
-import multiprocessing
 import time
-import random
 import math
+import multiprocessing
 from Losses import Losses
 from BColors import BColors
 from C4Node import C4Node
@@ -27,14 +26,10 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 class NetworkTraining(object):
 
     @staticmethod
-    def alphazero(config: C4Config, load=False):
+    def alphazero(config: C4Config):
         tf.keras.backend.clear_session()
         replay_buffer, storage = NetworkTraining.get_buffer_storage_from_base_manager(
             config)
-
-        if load:
-            network = Network(config.model_name)
-            storage.save_network(0, network)
 
         processes = []
 
@@ -45,7 +40,7 @@ class NetworkTraining(object):
 
         losses = Losses()
         NetworkTraining.train_network(
-            config, storage, replay_buffer, losses, load)
+            config, storage, replay_buffer, losses)
 
         for p in processes:
             p.terminate()
@@ -135,11 +130,10 @@ class NetworkTraining(object):
         visit_counts = [(child.visit_count, action)
                         for action, child in root.children.items()]
 
-        _, action = max(visit_counts, key=lambda item:item[0])
-        # if len(game.history) < config.num_sampling_moves:
-        #     _, action = NetworkTraining.softmax_sample(visit_counts)
-        # else:
-        #     _, action = max(visit_counts)
+        if len(game.history) < config.num_sampling_moves:
+            _, action = NetworkTraining.softmax_sample(visit_counts)
+        else:
+            _, action = max(visit_counts, key=lambda x:x[0])
         return action
 
     # Select the child with the highest UCB score.
@@ -215,23 +209,23 @@ class NetworkTraining(object):
         storage.save_network(step, network)
         losses.save(f"losses_{config.model_name}")
         losses.print_losses()
-        network.model.save(f"models/{config.model_name}")
+        network.cnn.write(config.model_name)
         print("Saved and downloaded neural network model and losses.")
 
     @staticmethod
     def wait_for_training_data(initial_buffer_size: int, replay_buffer: ReplayBuffer, config: C4Config):
-        while (replay_buffer.get_buffer_size() - initial_buffer_size) < 4 and replay_buffer.get_buffer_size() < config.window_size:
+        while (replay_buffer.get_buffer_size() - initial_buffer_size) < config.min_new_window and replay_buffer.get_buffer_size() < config.window_size:
             time.sleep(10)
 
     @staticmethod
     def train_network(config: C4Config, storage: SharedStorage,
-                      replay_buffer: ReplayBuffer, losses: Losses, load=False):
+                      replay_buffer: ReplayBuffer, losses: Losses):
 
-        network = Network(config.model_name) if load else Network()
+        network = Network(config)
         optimizer = tf.keras.optimizers.SGD(NetworkTraining.get_learning_rate_fn(config),
                                             config.momentum)
 
-        while (replay_buffer.get_buffer_size() < 4):
+        while (replay_buffer.get_buffer_size() < config.min_initial_window):
             # sleep until enough training data
             time.sleep(10)
         for i in range(config.training_steps):
@@ -275,32 +269,13 @@ class NetworkTraining(object):
         d: list of tuples (visit_count, associated action)
         Returns softmax visit count and action.
         """
-        # could add in temperature parameter if wanted
-        max_visits_one, _ = max(d, key=lambda item: item[0])
-        max_tuples_one = [item for item in d if item[0] == max_visits_one]
-
-        # finding the 2nd maximum tuples
-        remaining_tuples = [item for item in d if item[0] != max_visits_one]
-        max_visits_two, _ = max(remaining_tuples, key=lambda item: item[0])
-        max_tuples_two = [
-            item for item in remaining_tuples if item[0] == max_visits_two]
-
-        # finding the 3rd maximum tuples
-        left_tuples = [
-            item for item in remaining_tuples if item[0] != max_visits_two]
-        max_visits_three, _ = max(left_tuples, key=lambda item: item[0])
-        max_tuples_three = [
-            item for item in left_tuples if item[0] == max_visits_three]
-
-        # compilation of all three maximum values into one list
-        max_tuples = max_tuples_one + max_tuples_two + max_tuples_three
-        return random.choice(max_tuples)
+        visit_counts = [t[0] for t in d]
+        visit_count_probabilities = visit_counts / np.sum(visit_counts)
+        idx = np.random.multinomial(1, visit_count_probabilities)
+        return d[np.where(idx == 1)[0][0]]
 
     @staticmethod
     def launch_job(f, *args):
         x = Process(target=f, args=args)
         x.start()
         return x
-
-# if __name__ == "__main__":
-#     NetworkTraining.run_mcts(C4Config(), C4Game(), Network())
