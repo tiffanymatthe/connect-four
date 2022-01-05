@@ -7,13 +7,10 @@ sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
 import numpy as np
 from Losses import Losses
 from DataGenerator import DataGenerator
-from Network import Network
 from NetworkTraining import NetworkTraining
 from C4Config import C4Config
 from Node import Node
-from timeit import default_timer as timer
 import tensorflow as tf
-
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
@@ -69,10 +66,10 @@ def play_against_model(model):
 
 
 if __name__ == "__main__":
-    model_name = 'model_3'
+    model_name = 'model_4'
     final_network = train_network(model_name)
     final_network.model.save(f"models/{model_name}")
     # model = tf.keras.models.load_model("models/model_3")
     # play_against_model(model)
-    losses = Losses('losses_model_3')
+    losses = Losses('losses_model_4')
     losses.plot_losses()

@@ -156,7 +156,7 @@ class DataGeneratorTests(unittest.TestCase):
         state = -np.ones((6, 7))
         current_player_colour = 1
         stack = DataGenerator.get_nn_input(state, current_player_colour, True)
-        self.assertEqual(stack.shape, (6,7,3))
+        self.assertEqual(stack.shape, (6,7,2))
 
     def test_nn_input_game_invalid_state(self):
         state = -np.ones((6, 7))
@@ -199,7 +199,6 @@ class DataGeneratorTests(unittest.TestCase):
 
         self.assertTrue((stack[0] == current_player_layer).all())
         self.assertTrue((stack[1] == opponent_player_layer).all())
-        self.assertTrue((stack[2] == colour_layer).all())
 
     # -------------------- GET CURRENT PLAYER TESTS --------------------------------------
     def test_current_player_empty_board(self):

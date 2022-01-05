@@ -28,7 +28,7 @@ class Network(object):
 
     def inference(self, image):
         """
-        image is a numpy array of size 6 x 7 x 3
+        image is a numpy array of size 6 x 7 x 2
 
         Returns a tuple with value and policy: (scalar, array of length 7)
         https://github.com/tensorflow/tensorflow/issues/40261#issuecomment-647191650
@@ -46,8 +46,6 @@ class Network(object):
         """Clones the network with same weights. Only for prediction, so not compiled."""
         new = Network()
         new.model = tf.keras.models.clone_model(self.model)
-        # new.model.build((self.height, self.width, 3))
-        # new.model.compile(optimizer='sgd', loss=self.losses)
         new.model.set_weights(self.model.get_weights())
 
         return new
@@ -67,8 +65,6 @@ class Network(object):
         x = BatchNormalization(axis=-1)(x)
         x = Activation("relu")(x)
         x = Flatten()(x)
-        # x = MaxPooling2D(pool_size=(2, 2))(x)
-        # x = Dropout(0.25)(x)
 
         return x
 
@@ -80,15 +76,12 @@ class Network(object):
         from before hand therefore, that is our output size.
         """
         x = Network.get_common_layers(inputs)
-        # x = Dense(128)(x)
-        # x = Activation("relu")(x)
         x = Conv2D(2, (1, 1), padding="same")(inputs)
         x = BatchNormalization()(x)
         x = Activation("relu")(x)
-        # x = Dropout(0.5)(x)
         x = Flatten()(x)
 
-        x = Dense(7)(x)  # size of the output
+        x = Dense(7)(x)
         x = Activation("softmax", name="probability_output")(x)
 
         return x
@@ -103,15 +96,11 @@ class Network(object):
         Not sure about how to call the binary step function here. 
         """
         x = Network.get_common_layers(inputs)
-        # x = Flatten()(x)
-        # x = Dense(128)(x)
-        # x = Activation("relu")(x)
         x = Conv2D(1, (1, 1), padding="same")(inputs)
         x = BatchNormalization()(x)
         x = Activation("relu")(x)
         x = Dense(32)(x)
         x = Activation("relu")(x)
-        # x = Dropout(0.5)(x)
         x = Flatten()(x)
 
         x = Dense(1)(x)  # size of the output
@@ -121,8 +110,8 @@ class Network(object):
 
     @staticmethod
     def compile_model(width, height):
-        # 3 because we will have 3 channels (red tokens, yellow tokens, board state)
-        inputs = Input(shape=(height, width, 3))
+        # 2 because we will have 2 channels (player_to_move, opponent)
+        inputs = Input(shape=(height, width, 2))
         value_branch = Network.get_value_branch(inputs)
         policy_branch = Network.get_policy_branch(inputs)
 

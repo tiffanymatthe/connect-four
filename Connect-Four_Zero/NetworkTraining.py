@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 from multiprocessing.managers import BaseManager
 from multiprocessing import Process
 import tensorflow as tf
@@ -16,8 +19,6 @@ from Network import Network
 from ReplayBuffer import ReplayBuffer
 from SharedStorage import SharedStorage
 from C4Config import C4Config
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -134,7 +135,7 @@ class NetworkTraining(object):
         visit_counts = [(child.visit_count, action)
                         for action, child in root.children.items()]
 
-        _, action = max(visit_counts)
+        _, action = max(visit_counts, key=lambda item:item[0])
         # if len(game.history) < config.num_sampling_moves:
         #     _, action = NetworkTraining.softmax_sample(visit_counts)
         # else:

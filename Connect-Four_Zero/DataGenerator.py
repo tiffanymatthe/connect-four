@@ -85,15 +85,13 @@ class DataGenerator(object):
         -1 represents empty space, 0 and 1 represent player tokens.
         current_player_colour: 0 or 1, representing token of current player. assume correct.
 
-        Converts game state (as found in Node) to a 6 x 7 x 3 image stack with 3 binary feature planes.
-        1st plane = current player's tokens.
+        Converts game state (as found in Node) to a 6 x 7 x 2 image stack with 2 binary feature planes.
+        1st plane = current player's tokens. (player to move)
         2nd plane = opponent player's tokens.
-        3rd plane = constant plane representing colour to play.
 
-        Returns 6 x 7 x 3 numpy array.
+        Returns 6 x 7 x 2 numpy array.
 
         Raises ValueError if state is an invalid game state or if current_player_colour is wrong.
-        TODO: figure out if current_player_colour input is needed
         """
         if validate:
             if not DataGenerator.validate_state(state):
@@ -104,8 +102,7 @@ class DataGenerator(object):
                     "Invalid player colour {}".format(current_player_colour))
         plane_1 = np.isin(state, current_player_colour)
         plane_2 = np.isin(state, not current_player_colour)
-        plane_3 = np.ones((6, 7)) * current_player_colour
-        return np.dstack((plane_1, plane_2, plane_3))
+        return np.dstack((plane_1, plane_2))
 
     @staticmethod
     def get_current_player(state) -> int:
