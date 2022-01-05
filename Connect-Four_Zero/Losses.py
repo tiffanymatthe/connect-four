@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import pickle
-
+import matplotlib.pyplot as plt
+import time
 
 class Losses(object):
     def __init__(self, file=None) -> None:
@@ -27,9 +28,10 @@ class Losses(object):
             self.losses = pickle.load(file_to_read)
             print("successful read")
 
+    def print_losses(self, num=10):
+        np_losses = [l.numpy() for l in self.losses[-min(num, len(self.losses)):-1]]
+        print(np_losses)
+
     def plot_losses(self):
-        cnt = 0
-        for item in self.losses:
-            print('The data ', cnt, ' is : ', item)
-            print('item 1 ', item.numpy())
-            cnt += 1
+        plt.plot(self.losses)
+        plt.show(block=True)

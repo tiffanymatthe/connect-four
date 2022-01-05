@@ -134,10 +134,11 @@ class NetworkTraining(object):
         visit_counts = [(child.visit_count, action)
                         for action, child in root.children.items()]
 
-        if len(game.history) < config.num_sampling_moves:
-            _, action = NetworkTraining.softmax_sample(visit_counts)
-        else:
-            _, action = max(visit_counts)
+        _, action = max(visit_counts)
+        # if len(game.history) < config.num_sampling_moves:
+        #     _, action = NetworkTraining.softmax_sample(visit_counts)
+        # else:
+        #     _, action = max(visit_counts)
         return action
 
     # Select the child with the highest UCB score.
@@ -212,8 +213,14 @@ class NetworkTraining(object):
             replay_buffer.get_buffer_size()))
         storage.save_network(step, network)
         losses.save(f"losses_{config.model_name}")
+        losses.print_losses()
         network.model.save(f"models/{config.model_name}")
         print("Saved and downloaded neural network model and losses.")
+
+    @staticmethod
+    def wait_for_training_data(initial_buffer_size: int, replay_buffer: ReplayBuffer, config: C4Config):
+        while (replay_buffer.get_buffer_size() - initial_buffer_size) < 4 and replay_buffer.get_buffer_size() < config.window_size:
+            time.sleep(10)
 
     @staticmethod
     def train_network(config: C4Config, storage: SharedStorage,
@@ -223,15 +230,18 @@ class NetworkTraining(object):
         optimizer = tf.keras.optimizers.SGD(NetworkTraining.get_learning_rate_fn(config),
                                             config.momentum)
 
-        while (replay_buffer.get_buffer_size() < 3):
+        while (replay_buffer.get_buffer_size() < 4):
             # sleep until enough training data
             time.sleep(10)
         for i in range(config.training_steps):
+            initial_buffer_size = replay_buffer.get_buffer_size()
             if i % config.checkpoint_interval == 0:
-                NetworkTraining.save_at_checkpoint(replay_buffer, storage, losses, config, i, network)
+                NetworkTraining.save_at_checkpoint(
+                    replay_buffer, storage, losses, config, i, network)
             batch = replay_buffer.sample_batch()
             NetworkTraining.update_weights(
                 optimizer, network, batch, config.weight_decay, losses)
+            NetworkTraining.wait_for_training_data(initial_buffer_size, replay_buffer, config)
 
         storage.save_network(config.training_steps, network)
 
@@ -290,3 +300,6 @@ class NetworkTraining(object):
         x = Process(target=f, args=args)
         x.start()
         return x
+
+# if __name__ == "__main__":
+#     NetworkTraining.run_mcts(C4Config(), C4Game(), Network())

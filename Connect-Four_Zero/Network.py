@@ -56,10 +56,19 @@ class Network(object):
     def get_common_layers(inputs):
         # Returns a tensor representing the common layers
         x = Conv2D(32, (3, 3), padding="same")(inputs)
-        x = Activation("relu")(x)
         x = BatchNormalization(axis=-1)(x)
-        x = MaxPooling2D(pool_size=(2, 2))(x)
-        x = Dropout(0.25)(x)
+        x = Activation("relu")(x)
+        x = Flatten()(x)
+        x = Conv2D(32, (3, 3), padding="same")(inputs)
+        x = BatchNormalization(axis=-1)(x)
+        x = Activation("relu")(x)
+        x = Flatten()(x)
+        x = Conv2D(32, (3, 3), padding="same")(inputs)
+        x = BatchNormalization(axis=-1)(x)
+        x = Activation("relu")(x)
+        x = Flatten()(x)
+        # x = MaxPooling2D(pool_size=(2, 2))(x)
+        # x = Dropout(0.25)(x)
 
         return x
 
@@ -71,11 +80,13 @@ class Network(object):
         from before hand therefore, that is our output size.
         """
         x = Network.get_common_layers(inputs)
-        x = Flatten()(x)
-        x = Dense(128)(x)
-        x = Activation("relu")(x)
+        # x = Dense(128)(x)
+        # x = Activation("relu")(x)
+        x = Conv2D(2, (1, 1), padding="same")(inputs)
         x = BatchNormalization()(x)
-        x = Dropout(0.5)(x)
+        x = Activation("relu")(x)
+        # x = Dropout(0.5)(x)
+        x = Flatten()(x)
 
         x = Dense(7)(x)  # size of the output
         x = Activation("softmax", name="probability_output")(x)
@@ -92,11 +103,16 @@ class Network(object):
         Not sure about how to call the binary step function here. 
         """
         x = Network.get_common_layers(inputs)
-        x = Flatten()(x)
-        x = Dense(128)(x)
-        x = Activation("relu")(x)
+        # x = Flatten()(x)
+        # x = Dense(128)(x)
+        # x = Activation("relu")(x)
+        x = Conv2D(1, (1, 1), padding="same")(inputs)
         x = BatchNormalization()(x)
-        x = Dropout(0.5)(x)
+        x = Activation("relu")(x)
+        x = Dense(32)(x)
+        x = Activation("relu")(x)
+        # x = Dropout(0.5)(x)
+        x = Flatten()(x)
 
         x = Dense(1)(x)  # size of the output
         x = Activation("tanh", name="value_output")(x)
