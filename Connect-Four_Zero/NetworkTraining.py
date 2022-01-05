@@ -10,6 +10,8 @@ from BColors import BColors
 from Network import Network
 from ReplayBuffer import ReplayBuffer
 from C4Config import C4Config
+import numpy as np
+from Losses import Losses
 
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -35,17 +37,39 @@ class NetworkTraining(object):
 
         network = Network()
         processes = NetworkTraining.collect_game_data(config, network, replay_buffer)
+        history = None
+        losses = Losses()
 
-        for _ in config.training_steps:
+        for _ in config.iterations:
             for p in processes:
                 p.join()
             training_data = replay_buffer.get_batch()
             replay_buffer.clear_buffer()
             processes = NetworkTraining.collect_game_data(config, network, replay_buffer)
-            new_network = NetworkTraining.train_network(network.clone_network(), training_data, config)
-            if True: # TODO compare networks
+            new_network, new_history = NetworkTraining.train_network(network.clone_network(), training_data, config)
+            if NetworkTraining.pit_networks(history, new_history, losses, config):
                 network.cnn.model.set_weights(new_network.cnn.model.get_weights())
         return network
+
+    @staticmethod
+    def pit_networks(history, new_history, losses: Losses, config: C4Config):
+        """Returns True if the new network is better. Also updates overall losses."""
+        if history is None:
+            return True
+        overall_loss = history['loss'][config.EPOCHS - 1]
+        new_overall_loss = new_history['loss'][config.EPOCHS - 1]
+        update_network = False
+        if new_overall_loss <= overall_loss:
+            update_network = True
+            losses.add_loss(new_history['loss'][config.EPOCHS - 1],\
+                            new_history['value_head_loss'][config.EPOCHS - 1],\
+                            new_history['value_head_loss'][config.EPOCHS - 1])
+        else:
+            losses.add_loss(history['loss'][config.EPOCHS - 1],\
+                            history['value_head_loss'][config.EPOCHS - 1],\
+                            history['value_head_loss'][config.EPOCHS - 1])
+        return update_network
+        
 
     @staticmethod
     def get_buffer_from_base_manager(config):
@@ -78,9 +102,13 @@ class NetworkTraining(object):
 
     @staticmethod
     def train_network(network: Network, training_data: list, config: C4Config):
-        network.cnn.model.fit(...)
-        return network
-        # states, targets, epochs=epochs, verbose=verbose, validation_split = validation_split, batch_size = batch_size
+        """training_data is a list with tuples (image, (policy, value))"""
+        training_states = np.array([x[0] for x in training_data])
+        policy_targets = np.array([x[1][0] for x in training_data])
+        value_targets = np.array([x[1][1] for x in training_data])
+        training_targets = {'value_head': value_targets, 'policy_head': policy_targets}
+        fit = network.cnn.model.fit(x=training_states, y=training_targets, epochs=config.epochs, verbose=1, validation_split=0, batch_size=config.batch_size)
+        return network, fit.history
 
     # @staticmethod
     # def update_weights(optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,
