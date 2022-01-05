@@ -32,23 +32,26 @@ class NetworkTraining(object):
     @staticmethod
     def alphazero(config: C4Config):
         tf.keras.backend.clear_session()
-        replay_buffer = NetworkTraining.get_buffer_from_base_manager(
-            config)
+        replay_buffer = NetworkTraining.get_buffer_from_base_manager()
 
-        network = Network()
+        network = Network(config)
         processes = NetworkTraining.collect_game_data(config, network, replay_buffer)
         history = None
         losses = Losses()
 
-        for _ in config.iterations:
+        for i in range(config.iterations):
+            print(f'{BColors.HEADER}Iteration {i}/{config.iterations}{BColors.ENDC}')
             for p in processes:
                 p.join()
             training_data = replay_buffer.get_batch()
             replay_buffer.clear_buffer()
+            print("Received training data and reset buffer.")
             processes = NetworkTraining.collect_game_data(config, network, replay_buffer)
             new_network, new_history = NetworkTraining.train_network(network.clone_network(), training_data, config)
             if NetworkTraining.pit_networks(history, new_history, losses, config):
+                print(f"{BColors.OKBLUE}Replacing network with new model.{BColors.ENDC}")
                 network.cnn.model.set_weights(new_network.cnn.model.get_weights())
+                network.cnn.write(config.model_name)
         return network
 
     @staticmethod
@@ -68,15 +71,16 @@ class NetworkTraining(object):
             losses.add_loss(history['loss'][config.EPOCHS - 1],\
                             history['value_head_loss'][config.EPOCHS - 1],\
                             history['value_head_loss'][config.EPOCHS - 1])
+        print(losses.losses)
         return update_network
         
 
     @staticmethod
-    def get_buffer_from_base_manager(config):
+    def get_buffer_from_base_manager():
         BaseManager.register('ReplayBuffer', ReplayBuffer)
         manager = BaseManager()
         manager.start()
-        replay_buffer = manager.ReplayBuffer(config)
+        replay_buffer = manager.ReplayBuffer()
         return replay_buffer
 
     # ----------------TRAINING------------------------------------------

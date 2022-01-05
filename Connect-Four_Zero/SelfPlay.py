@@ -29,7 +29,7 @@ class SelfPlay():
         while replay_buffer.get_buffer_size() < config.num_games:
             game = SelfPlay.play_game(config, network)
             replay_buffer.save_game(game)
-            print("Game {} finished by process {}".format(replay_buffer.get_buffer_size(), id))
+            print("Game {}/{} finished by process {}".format(replay_buffer.get_buffer_size(), config.num_games, id))
 
     # Each game is produced by starting at the initial board position, then
     # repeatedly executing a Monte Carlo Tree Search to generate moves until the end
@@ -39,6 +39,7 @@ class SelfPlay():
     def play_game(config: C4Config, network: Network):
         game = C4Game()
         while not game.terminal() and len(game.history) < config.max_moves:
+            print(len(game.history))
             action, root = SelfPlay.run_mcts(config, game, network)
             game.apply(action)
             game.store_search_statistics(root)
@@ -52,10 +53,13 @@ class SelfPlay():
     @staticmethod
     def run_mcts(config: C4Config, game: C4Game, network: Network):
         root = C4Node(0)
+        print("before evaluating")
         SelfPlay.evaluate(root, game, network)
+        print("after evaluating")
         SelfPlay.add_exploration_noise(config, root)
 
-        for _ in range(config.num_simulations):
+        for i in range(config.num_simulations):
+            print(i)
             node = root
             scratch_game = game.clone()
             search_path = [node]
