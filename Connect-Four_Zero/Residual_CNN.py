@@ -123,3 +123,6 @@ class Residual_CNN(Gen_Model):
         model = Model(inputs=[main_input], outputs=[vh, ph])
 
         return model
+    
+    def compile_model(self):
+        
