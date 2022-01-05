@@ -17,7 +17,6 @@ class SharedStorage(object):
                     else:
                         return make_uniform_network()
             except KeyError:
-                # TODO: could be infinite recursion...
                 print(f"{BColors.WARNING}Key Error when trying to retrieve latest network. Trying again.{BColors.ENDC}")
 
     def save_network(self, step: int, network: Network):

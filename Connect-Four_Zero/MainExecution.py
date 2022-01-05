@@ -161,6 +161,9 @@ def play_against_model(model):
     print("Winner is {}: {}".format(winner, board.colors[winner]))
 
 if __name__ == "__main__":
-    model_name = 'model_1'
-    final_network = train_network(model_name, load=True)
-    final_network.model.save(f"models/{model_name}_continued")
+    # model_name = 'model_1'
+    # final_network = train_network(model_name, load=True)
+    # final_network.model.save(f"models/{model_name}_continued")
+    network = Network()
+    model = network.model
+    play_against_model(model)

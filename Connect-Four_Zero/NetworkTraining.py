@@ -1,30 +1,26 @@
 #!/usr/bin/env python
+from multiprocessing.managers import BaseManager
+from multiprocessing import Process
+import tensorflow as tf
+import numpy as np
+from typing import List
+import multiprocessing
+import time
+import random
+import math
+from Losses import Losses
+from BColors import BColors
+from C4Node import C4Node
+from C4Game import C4Game
+from Network import Network
+from ReplayBuffer import ReplayBuffer
+from SharedStorage import SharedStorage
+from C4Config import C4Config
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-from C4Config import C4Config
-from SharedStorage import SharedStorage
-from ReplayBuffer import ReplayBuffer
-from Network import Network
-from C4Game import C4Game
-from C4Node import C4Node
-from BColors import BColors
-from Losses import Losses
 
-import math
-import random
-import time
-import multiprocessing
-from typing import List
-import numpy as np
-import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-from multiprocessing import Process
-from multiprocessing.managers import BaseManager
-import random
-import sys
-
-import numpy as np
 
 
 class NetworkTraining(object):
@@ -47,7 +43,8 @@ class NetworkTraining(object):
             processes.append(p)
 
         losses = Losses()
-        NetworkTraining.train_network(config, storage, replay_buffer, losses, load)
+        NetworkTraining.train_network(
+            config, storage, replay_buffer, losses, load)
 
         for p in processes:
             p.terminate()
@@ -66,6 +63,15 @@ class NetworkTraining(object):
         storage = manager.SharedStorage()
         return replay_buffer, storage
 
+    @staticmethod
+    def get_latest_network(storage, attempts=3):
+        for _ in range(attempts):
+            try:
+                return storage.latest_network()
+            except KeyError:
+                print(
+                    f"{BColors.WARNING}Key Error when trying to retrieve latest network. Trying again in NetworkTraining.{BColors.ENDC}")
+
     # ----------------SELF PLAY----------------------------------------
 
     # Each self-play job is independent of all others; it takes the latest network
@@ -75,21 +81,15 @@ class NetworkTraining(object):
     @staticmethod
     def run_selfplay(config: C4Config, storage: SharedStorage,
                      replay_buffer: ReplayBuffer):
-        i = 0
         id = multiprocessing.current_process()._identity[0]
         print("Starting self-play for process {}".format(id))
+        game_num = 0
         while True:
-            for _ in range(3):
-                try:
-                    network = storage.latest_network()
-                    break
-                except KeyError:
-                    print(
-                        f"{BColors.WARNING}Key Error when trying to retrieve latest network. Trying again.{BColors.ENDC}")
+            network = NetworkTraining.get_latest_network(storage)
             game = NetworkTraining.play_game(config, network)
             replay_buffer.save_game(game)
-            print("Finished game {} for process {}".format(i, id))
-            i += 1
+            print("Finished game {} for process {}".format(game_num, id))
+            game_num += 1
 
     # Each game is produced by starting at the initial board position, then
     # repeatedly executing a Monte Carlo Tree Search to generate moves until the end
@@ -98,15 +98,10 @@ class NetworkTraining(object):
     @staticmethod
     def play_game(config: C4Config, network: Network):
         game = C4Game()
-        # i = 0
         while not game.terminal() and len(game.history) < config.max_moves:
-            # sys.stdout.write('\r')
-            # sys.stdout.write("[{:{}}] {:.1f}%".format("="*i, config.max_moves-1, (100/(config.max_moves-1)*i)))
-            # sys.stdout.flush()
             action, root = NetworkTraining.run_mcts(config, game, network)
             game.apply(action)
             game.store_search_statistics(root)
-            # i += 1
         return game
 
     # Core Monte Carlo Tree Search algorithm.
@@ -120,7 +115,7 @@ class NetworkTraining(object):
         NetworkTraining.evaluate(root, game, network)
         NetworkTraining.add_exploration_noise(config, root)
 
-        for i in range(config.num_simulations):
+        for _ in range(config.num_simulations):
             node = root
             scratch_game = game.clone()
             search_path = [node]
@@ -139,11 +134,10 @@ class NetworkTraining(object):
         visit_counts = [(child.visit_count, action)
                         for action, child in root.children.items()]
 
-        _, action = max(visit_counts)
-        # if len(game.history) < config.num_sampling_moves:
-        #     _, action = NetworkTraining.softmax_sample(visit_counts)
-        # else:
-        #     _, action = max(visit_counts)
+        if len(game.history) < config.num_sampling_moves:
+            _, action = NetworkTraining.softmax_sample(visit_counts)
+        else:
+            _, action = max(visit_counts)
         return action
 
     # Select the child with the highest UCB score.
@@ -202,34 +196,39 @@ class NetworkTraining(object):
                 (1 - frac) + n * frac
 
     # ----------------TRAINING------------------------------------------
+    @staticmethod
+    def get_learning_rate_fn(config: C4Config):
+        boundaries = list(config.learning_rate_schedule.keys())
+        boundaries.pop(0)
+        return tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+            boundaries, config.learning_rate_schedule.values())
+
+    @staticmethod
+    def save_at_checkpoint(replay_buffer: ReplayBuffer, storage: SharedStorage,
+                           losses: Losses, config: C4Config, step: int, network: Network):
+        print("{}At checkpoint {}/{}{}".format(BColors.OKBLUE,
+                                               step, config.training_steps, BColors.ENDC))
+        print("Replay buffer size: {}".format(
+            replay_buffer.get_buffer_size()))
+        storage.save_network(step, network)
+        losses.save(f"losses_{config.model_name}")
+        network.model.save(f"models/{config.model_name}")
+        print("Saved and downloaded neural network model and losses.")
 
     @staticmethod
     def train_network(config: C4Config, storage: SharedStorage,
                       replay_buffer: ReplayBuffer, losses: Losses, load=False):
-        network = network = Network(config.model_name) if load else Network()
-        boundaries = list(config.learning_rate_schedule.keys())
-        boundaries.pop(0)
-        learning_rate_fn = tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-            boundaries, config.learning_rate_schedule.values())
-        optimizer = tf.keras.optimizers.SGD(learning_rate_fn,
+
+        network = Network(config.model_name) if load else Network()
+        optimizer = tf.keras.optimizers.SGD(NetworkTraining.get_learning_rate_fn(config),
                                             config.momentum)
-        # sleep until there is something to do.
+
         while (replay_buffer.get_buffer_size() < 3):
+            # sleep until enough training data
             time.sleep(10)
         for i in range(config.training_steps):
             if i % config.checkpoint_interval == 0:
-                print("{}At checkpoint {}/{}{}".format(BColors.OKBLUE,
-                      i, config.training_steps, BColors.ENDC))
-                print("Replay buffer size: {}".format(
-                    replay_buffer.get_buffer_size()))
-                storage.save_network(i, network)
-                losses.save(f"losses_{config.model_name}")
-            if replay_buffer.is_empty():
-                time.sleep(0.2)
-                continue
-            if i % (config.checkpoint_interval * 3) == 0:
-                print("SAVED CURRENT NEURAL NETWORK MODEL")
-                network.model.save(f"models/{config.model_name}_continued")
+                NetworkTraining.save_at_checkpoint(replay_buffer, storage, losses, config, i, network)
             batch = replay_buffer.sample_batch()
             NetworkTraining.update_weights(
                 optimizer, network, batch, config.weight_decay, losses)
@@ -269,17 +268,20 @@ class NetworkTraining(object):
         max_visits_one, _ = max(d, key=lambda item: item[0])
         max_tuples_one = [item for item in d if item[0] == max_visits_one]
 
-        #finding the 2nd maximum tuples
+        # finding the 2nd maximum tuples
         remaining_tuples = [item for item in d if item[0] != max_visits_one]
         max_visits_two, _ = max(remaining_tuples, key=lambda item: item[0])
-        max_tuples_two = [item for item in remaining_tuples if item[0] == max_visits_two]
+        max_tuples_two = [
+            item for item in remaining_tuples if item[0] == max_visits_two]
 
-        #finding the 3rd maximum tuples
-        left_tuples = [item for item in remaining_tuples if item[0] != max_visits_two]
+        # finding the 3rd maximum tuples
+        left_tuples = [
+            item for item in remaining_tuples if item[0] != max_visits_two]
         max_visits_three, _ = max(left_tuples, key=lambda item: item[0])
-        max_tuples_three = [item for item in left_tuples if item[0] == max_visits_three]
+        max_tuples_three = [
+            item for item in left_tuples if item[0] == max_visits_three]
 
-        #compilation of all three maximum values into one list
+        # compilation of all three maximum values into one list
         max_tuples = max_tuples_one + max_tuples_two + max_tuples_three
         return random.choice(max_tuples)
 
