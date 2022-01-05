@@ -7,7 +7,7 @@ class C4Config(object):
         self.num_actors = 3 # 5000
         self.num_sampling_moves = 10 # 30
         self.max_moves = 42 + 1  # 512 for chess and shogi, 722 for Go.
-        self.num_simulations = 14 # 800
+        self.num_simulations = 25 # 800
 
         # Root prior exploration noise.
         # for chess, 0.03 for Go and 0.15 for shogi.
@@ -20,22 +20,19 @@ class C4Config(object):
 
         # Training
         self.training_steps = int(20)
-        self.checkpoint_interval = int(4)
-        self.window_size = int(100) # int(1e6)
-        self.batch_size = 256 # 4096
+        self.checkpoint_interval = int(2)
+        self.window_size = int(50) # int(1e6)
+        self.batch_size = 20 * 50 // 2 # 4096
 
         self.weight_decay = 1e-4
         self.momentum = 0.9
         # Schedule for chess and shogi, Go starts at 2e-2 immediately.
         self.learning_rate_schedule = {
             0: 2e-1,
-            20: 2e-2,
-            40: 2e-3,
-            45: 2e-4
+            8: 2e-2,
+            14: 2e-3,
+            17: 2e-4
         }
-
-        self.min_initial_window = 2
-        self.min_new_window = 1
 
         self.input_shape = (6,7,2)
         self.output_policy_shape = 7
