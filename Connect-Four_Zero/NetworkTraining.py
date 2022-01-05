@@ -25,8 +25,7 @@ class NetworkTraining(object):
                 SelfPlay.run_selfplay, config, network, replay_buffer)
             processes.append(p)
 
-        for p in processes:
-            p.join()
+        return processes
 
     @staticmethod
     def alphazero(config: C4Config):
@@ -35,13 +34,17 @@ class NetworkTraining(object):
             config)
 
         network = Network()
+        processes = NetworkTraining.collect_game_data(config, network, replay_buffer)
 
         for _ in config.training_steps:
-            NetworkTraining.collect_game_data(config, network, replay_buffer)
+            for p in processes:
+                p.join()
             training_data = replay_buffer.get_batch()
             replay_buffer.clear_buffer()
-            network = NetworkTraining.train_network(network, training_data, config)
-            # maybe add comparison of which one is better (check losses or history or accuracy?)
+            processes = NetworkTraining.collect_game_data(config, network, replay_buffer)
+            new_network = NetworkTraining.train_network(network.clone_network(), training_data, config)
+            if True: # TODO compare networks
+                network.cnn.model.set_weights(new_network.cnn.model.get_weights())
         return network
 
     @staticmethod
@@ -53,12 +56,12 @@ class NetworkTraining(object):
         return replay_buffer
 
     # ----------------TRAINING------------------------------------------
-    @staticmethod
-    def get_learning_rate_fn(config: C4Config):
-        boundaries = list(config.learning_rate_schedule.keys())
-        boundaries.pop(0)
-        return tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-            boundaries, config.learning_rate_schedule.values())
+    # @staticmethod
+    # def get_learning_rate_fn(config: C4Config):
+    #     boundaries = list(config.learning_rate_schedule.keys())
+    #     boundaries.pop(0)
+    #     return tf.keras.optimizers.schedules.PiecewiseConstantDecay(
+    #         boundaries, config.learning_rate_schedule.values())
 
     # @staticmethod
     # def save_at_checkpoint(replay_buffer: ReplayBuffer, storage: SharedStorage,
@@ -75,8 +78,9 @@ class NetworkTraining(object):
 
     @staticmethod
     def train_network(network: Network, training_data: list, config: C4Config):
-
-        network.fit(...) # TODO
+        network.cnn.model.fit(...)
+        return network
+        # states, targets, epochs=epochs, verbose=verbose, validation_split = validation_split, batch_size = batch_size
 
     # @staticmethod
     # def update_weights(optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,

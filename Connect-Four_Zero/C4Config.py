@@ -8,6 +8,7 @@ class C4Config(object):
         self.num_sampling_moves = 10 # 30
         self.max_moves = 42 + 1  # 512 for chess and shogi, 722 for Go.
         self.num_simulations = 25 # 800
+        self.num_games = 50 # per training step
 
         # Root prior exploration noise.
         # for chess, 0.03 for Go and 0.15 for shogi.

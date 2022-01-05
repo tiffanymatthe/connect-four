@@ -31,8 +31,8 @@ class Network(object):
         return self.cnn.model.trainable_weights
 
     def clone_network(self, config):
-        """Clones the network with same weights. Only for prediction, so not compiled."""
-        new = Network(config, tf.keras.models.clone_model(self.cnn.model))
+        """Clones the network with same weights."""
+        new = Network(config)
         new.cnn.model.set_weights(self.cnn.model.get_weights())
         return new
 
