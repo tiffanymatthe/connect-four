@@ -4,6 +4,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import logging
 logging.disable(logging.WARNING)
 from C4Config import C4Config
+from Softmax_Loss import softmax_cross_entropy_with_logits 
+from keras.optimizers import SGD
+from keras import regularizers
 
 import tensorflow as tf
 from keras.models import load_model, Model
@@ -30,8 +33,12 @@ class Residual_CNN(Gen_Model):
     def __init__(self, config: C4Config, model=None):
         Gen_Model.__init__(self, config.input_shape, config.output_policy_shape)
         self.hidden_layers = config.hidden_layers
+        self.reg_const = config.weight_decay
         self.num_layers = len(self.hidden_layers)
         self.model = model if model else self._build_model()
+
+        self.learning_rate = config.learning_rate_schedule
+        self.MOMENTUM = config.momentum
 
     def residual_layer(self, input_block, filters, kernel_size):
 
@@ -63,40 +70,36 @@ class Residual_CNN(Gen_Model):
     def value_head(self, x):
 
         x = Conv2D(
-            filters=1, kernel_size=(1, 1), padding='same', use_bias=False, activation='linear'
-        )(x)
-
+            filters=1, kernel_size=(1, 1), padding='same', use_bias=False, 
+            activation='linear', 
+            kernel_regularizer = regularizers.l2(self.reg_const))(x)
         x = BatchNormalization(axis=-1)(x)
         x = LeakyReLU()(x)
-
         x = Flatten()(x)
-
         x = Dense(
-            20, use_bias=False, activation='linear'
-        )(x)
-
+            20, use_bias=False, activation='linear', 
+            kernel_regularizer=regularizers.l2(self.reg_const))(x)
         x = LeakyReLU()(x)
-
         x = Dense(
-            1, use_bias=False, activation='tanh', name='value_head'
-        )(x)
+            1, use_bias=False, activation='tanh', 
+            kernel_regularizer=regularizers.l2(self.reg_const), 
+            name='value_head')(x)
 
         return (x)
 
     def policy_head(self, x):
 
         x = Conv2D(
-            filters=2, kernel_size=(1, 1), padding='same', use_bias=False, activation='linear'
-        )(x)
-
+            filters=2, kernel_size=(1, 1), padding='same', use_bias=False, 
+            activation='linear', 
+            kernel_regularizer = regularizers.l2(self.reg_const))(x)
         x = BatchNormalization(axis=-1)(x)
         x = LeakyReLU()(x)
-
         x = Flatten()(x)
-
         x = Dense(
-            self.output_dim, use_bias=False, activation='linear', name='policy_head'
-        )(x)
+            self.output_dim, use_bias=False, activation='linear', 
+            kernel_regularizer=regularizers.l2(self.reg_const), 
+            name='policy_head')(x)
 
         return (x)
 
@@ -121,30 +124,13 @@ class Residual_CNN(Gen_Model):
         ph = self.policy_head(x)
 
         model = Model(inputs=[main_input], outputs=[vh, ph])
-
         losses = {
             "value_head": "mse", 
-            "policy_head":"categorical_crossentropy"
+            "policy_head": softmax_cross_entropy_with_logits
         }
-        model.compile(optimizer='sgd', loss=losses)
-
+        opt = SGD(lr=self.learning_rate, momentum = self.MOMENTUM),	
+        model.compile(loss = losses, 
+                    optimizer = opt, 
+                    loss_weights = {'value_head': 0.5, 'policy_head': 0.5}) #not sure where these values come from tho?
 
         return model
-    
-
-import tensorflow as tf
-
-def softmax_cross_entropy_with_logits(y_true, y_pred):
-
-	p = y_pred
-	pi = y_true
-
-	zero = tf.zeros(shape = tf.shape(pi), dtype=tf.float32)
-	where = tf.equal(pi, zero)
-
-	negatives = tf.fill(tf.shape(pi), -100.0) 
-	p = tf.where(where, negatives, p)
-
-	loss = tf.nn.softmax_cross_entropy_with_logits(labels = pi, logits = p)
-
-	return loss
