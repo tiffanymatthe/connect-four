@@ -10,6 +10,9 @@ from keras.models import load_model, Model
 from keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, LeakyReLU, add
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
+"""
+Modified by https://medium.com/applied-data-science/how-to-build-your-own-alphazero-ai-using-python-and-keras-7f664945c188
+"""
 
 class Gen_Model():
     def __init__(self, input_dim, output_dim):
