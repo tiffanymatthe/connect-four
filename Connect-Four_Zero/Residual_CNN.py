@@ -23,19 +23,25 @@ class Gen_Model():
         self.output_dim = output_dim
 
     def write(self, version):
-        self.model.save('models/version' + "{0:0>4}".format(version) + '.h5')
+        self.model.save('models/version' + "{0:0>4}".format(version))
 
     def read(self, version):
-        return load_model("models/version" + "{0:0>4}".format(version) + '.h5')
+        return load_model("models/version" + "{0:0>4}".format(version), custom_objects={'softmax_cross_entropy_with_logits': softmax_cross_entropy_with_logits})
 
 
 class Residual_CNN(Gen_Model):
-    def __init__(self, config: C4Config, model=None):
+    def __init__(self, config: C4Config, model_name=None, model=None):
         Gen_Model.__init__(self, config.input_shape, config.output_policy_shape)
         self.hidden_layers = config.hidden_layers
         self.reg_const = config.weight_decay
         self.num_layers = len(self.hidden_layers)
-        self.model = model if model else self._build_model(config)
+        self.model = None
+        if model:
+            self.model = model
+        elif model_name:
+            self.model = self.read(model_name)
+        else:
+            self.model = self._build_model(config)
 
     def residual_layer(self, input_block, filters, kernel_size):
 

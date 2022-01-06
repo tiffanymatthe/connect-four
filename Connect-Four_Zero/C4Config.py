@@ -4,7 +4,7 @@ class C4Config(object):
 
     def __init__(self, model_name=None):
         # Self-Play
-        self.num_actors = 3 # 5000
+        self.num_actors = 1 # 5000
         self.num_sampling_moves = 10 # 30
         self.max_moves = 42 + 1  # 512 for chess and shogi, 722 for Go.
         self.num_simulations = 10 # 800

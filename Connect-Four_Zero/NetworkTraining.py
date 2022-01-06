@@ -12,19 +12,18 @@ from ReplayBuffer import ReplayBuffer
 from C4Config import C4Config
 import numpy as np
 from Losses import Losses
-
-
+import time
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
 class NetworkTraining(object):
 
     @staticmethod
-    def collect_game_data(config, network, replay_buffer):
+    def collect_game_data(config, replay_buffer):
         processes = []
         for _ in range(config.num_actors):
             p = NetworkTraining.launch_job(
-                SelfPlay.run_selfplay, config, network, replay_buffer)
+                SelfPlay.run_selfplay, config, replay_buffer)
             processes.append(p)
 
         return processes
@@ -33,9 +32,11 @@ class NetworkTraining(object):
     def alphazero(config: C4Config):
         tf.keras.backend.clear_session()
         replay_buffer = NetworkTraining.get_buffer_from_base_manager()
-
         network = Network(config)
-        processes = NetworkTraining.collect_game_data(config, network, replay_buffer)
+
+        network.cnn.write(config.model_name)
+
+        processes = NetworkTraining.collect_game_data(config, replay_buffer)
         history = None
         losses = Losses()
 
@@ -46,7 +47,7 @@ class NetworkTraining(object):
             training_data = replay_buffer.get_batch()
             replay_buffer.clear_buffer()
             print("Received training data and reset buffer.")
-            processes = NetworkTraining.collect_game_data(config, network, replay_buffer)
+            processes = NetworkTraining.collect_game_data(config, replay_buffer)
             new_network, new_history = NetworkTraining.train_network(network.clone_network(), training_data, config)
             if NetworkTraining.pit_networks(history, new_history, losses, config):
                 print(f"{BColors.OKBLUE}Replacing network with new model.{BColors.ENDC}")

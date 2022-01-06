@@ -9,8 +9,14 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
 class Network(object):
-    def __init__(self, config: C4Config, model=None) -> None:
-        self.cnn = Residual_CNN(config, model) if model else Residual_CNN(config)
+    def __init__(self, config: C4Config, model_name=None, model=None) -> None:
+        self.cnn = None
+        if model:
+            self.cnn = Residual_CNN(config, model=model)
+        elif model_name:
+            self.cnn = Residual_CNN(config, model_name=model_name)
+        else:
+            self.cnn = Residual_CNN(config) 
         self.width = 7
         self.height = 6
 
@@ -21,8 +27,10 @@ class Network(object):
         Returns a tuple with value and policy: (scalar, array of length 7)
         https://github.com/tensorflow/tensorflow/issues/40261#issuecomment-647191650
         """
+        print(self)
         tensor = tf.convert_to_tensor(image[None], dtype=tf.int32)
         value, policy = self.cnn.model(tensor, training=False)
+        print("done prediction")
         return value[0, 0], policy[0]
 
     def get_weights(self):

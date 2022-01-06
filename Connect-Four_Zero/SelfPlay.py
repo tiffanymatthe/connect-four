@@ -22,8 +22,8 @@ class SelfPlay():
     # writing it to a shared replay buffer.
 
     @staticmethod
-    def run_selfplay(config: C4Config, network: Network,
-                     replay_buffer: ReplayBuffer):
+    def run_selfplay(config: C4Config, replay_buffer: ReplayBuffer):
+        network = Network(config, model_name=config.model_name) # loads model from files
         id = multiprocessing.current_process()._identity[0]
         print("Starting self-play for process {}".format(id))
         while replay_buffer.get_buffer_size() < config.num_games:
@@ -110,6 +110,9 @@ class SelfPlay():
     @staticmethod
     def evaluate(node: C4Node, game: C4Game, network: Network):
         value, policy_logits = network.inference(game.make_image(-1))
+        print("finished inference")
+        print(value)
+        print(policy_logits)
         # Expand the node.
         node.to_play = game.to_play()
         policy = {a: math.exp(policy_logits[a]) for a in game.legal_actions()}
