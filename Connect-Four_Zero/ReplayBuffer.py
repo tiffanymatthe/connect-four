@@ -19,9 +19,8 @@ class ReplayBuffer(object):
     def get_batch(self):
         batch = []
         for game in self.buffer:
-            for i in len(game.history):
+            for i in range(len(game.history)):
                 if i == 0:
-                    # not sure if first history should be included. probably not
                     continue
                 batch.append(game.make_image(i), game.make_target(i)) 
         return batch
