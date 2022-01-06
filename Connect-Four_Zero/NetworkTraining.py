@@ -84,27 +84,6 @@ class NetworkTraining(object):
         replay_buffer = manager.ReplayBuffer()
         return replay_buffer
 
-    # ----------------TRAINING------------------------------------------
-    # @staticmethod
-    # def get_learning_rate_fn(config: C4Config):
-    #     boundaries = list(config.learning_rate_schedule.keys())
-    #     boundaries.pop(0)
-    #     return tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-    #         boundaries, config.learning_rate_schedule.values())
-
-    # @staticmethod
-    # def save_at_checkpoint(replay_buffer: ReplayBuffer, storage: SharedStorage,
-    #                        losses: Losses, config: C4Config, step: int, network: Network):
-    #     print("{}At checkpoint {}/{}{}".format(BColors.OKBLUE,
-    #                                            step, config.training_steps, BColors.ENDC))
-    #     print("Replay buffer size: {}".format(
-    #         replay_buffer.get_buffer_size()))
-    #     storage.save_network(step, network, config)
-    #     losses.save(f"losses_{config.model_name}")
-    #     losses.print_losses()
-    #     network.cnn.write(config.model_name)
-    #     print("Saved and downloaded neural network model and losses.")
-
     @staticmethod
     def train_network(network: Network, training_data: list, config: C4Config):
         """training_data is a list with tuples (image, (policy, value))"""
@@ -114,29 +93,6 @@ class NetworkTraining(object):
         training_targets = {'value_head': value_targets, 'policy_head': policy_targets}
         fit = network.cnn.model.fit(x=training_states, y=training_targets, epochs=config.epochs, verbose=1, validation_split=0, batch_size=config.batch_size)
         return network, fit.history
-
-    # @staticmethod
-    # def update_weights(optimizer: tf.keras.optimizers.Optimizer, network: Network, batch,
-    #                    weight_decay: float, losses: Losses):
-    #     def loss_fcn():
-    #         loss = 0
-    #         mse = tf.keras.losses.MeanSquaredError(reduction="auto")
-    #         for image, (target_value, target_policy) in batch:
-    #             value, policy_logits = network.inference(image)
-    #             target_value = [target_value]
-    #             loss += (
-    #                 mse(value, target_value).numpy() +
-    #                 tf.nn.softmax_cross_entropy_with_logits(
-    #                     logits=policy_logits, labels=target_policy))
-
-    #         for weights in network.get_weights():
-    #             loss += weight_decay * tf.nn.l2_loss(weights)
-
-    #         losses.add_loss(loss)
-
-    #         return loss
-
-    #     optimizer.minimize(loss_fcn, var_list=network.get_weights())
 
     @staticmethod
     def launch_job(f, *args):
