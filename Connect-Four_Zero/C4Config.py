@@ -20,8 +20,8 @@ class C4Config(object):
         self.pb_c_init = 1.25
 
         # Training
-        self.epochs = 40
-        self.batch_size = 32
+        self.epochs = 200
+        self.batch_size = 24
 
         self.iterations = int(2)
         self.checkpoint_interval = int(2) # not currently in use
@@ -31,9 +31,9 @@ class C4Config(object):
         # Schedule for chess and shogi, Go starts at 2e-2 immediately.
         self.learning_rate_schedule = {
             0: 2e-1,
-            5: 2e-2,
-            10: 2e-3,
-            20: 2e-4
+            50: 2e-2,
+            120: 2e-3,
+            160: 2e-4
         }
 
         self.input_shape = (6,7,2)
