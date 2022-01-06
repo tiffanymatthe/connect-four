@@ -3,12 +3,12 @@ import tensorflow as tf
 
 def softmax_cross_entropy_with_logits(y_true, y_pred):
 
-    p = y_pred
-    pi = y_true
+    p = y_pred # probability distribution, -1 to 1?
+    pi = y_true # probability distribution with values from 0 to 1
 
     zero = tf.zeros(shape=tf.shape(pi), dtype=tf.int64)
     where = tf.equal(pi, zero)
-
+    where = tf.cast(where, tf.float32)
     negatives = tf.fill(tf.shape(pi), -100.0) 
     p = tf.where(where, negatives, p)
     pi = tf.constant(pi, dtype=tf.float32)
