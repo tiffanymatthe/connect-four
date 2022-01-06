@@ -61,7 +61,7 @@ class NetworkTraining(object):
             train_start_time = time.time()
             new_network, new_history = NetworkTraining.train_network(network.clone_network(config), training_data, config)
             print("Training network took {} minutes".format((time.time() - train_start_time)/60))
-            if NetworkTraining.pit_networks(history, new_history, losses, config):
+            if NetworkTraining.pit_networks(history, new_history, config):
                 print(f"{BColors.OKBLUE}Replacing network with new model.{BColors.ENDC}")
                 network.cnn.model.set_weights(new_network.cnn.model.get_weights())
                 network.cnn.write_weights(config.model_name)
@@ -96,7 +96,6 @@ class NetworkTraining(object):
         to_play_index = random.randint(0,1)
         first_player = to_play_index
         while not game.terminal() and len(game.history) < config.max_moves:
-            # action, _ = SelfPlay.run_mcts(config, game, networks[to_play_index])
             _, policy_logits = networks[to_play_index].inference(game.make_image(-1))
             policy = {a: policy_logits[a] for a in game.legal_actions()} # I removed math.exp.
             game.apply(max(policy, key=policy.get)) # gets key for max value
@@ -113,8 +112,8 @@ class NetworkTraining(object):
             if first_player_win == 1:
                 return 1 # new network wins
             else:
-                return 0 # network inws
-        return -100
+                return 0 # network wins
+        return -100 # should be unreachable
 
     @staticmethod
     def update_losses(history, losses: Losses, config: C4Config):
