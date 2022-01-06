@@ -90,9 +90,10 @@ class NetworkTraining(object):
         print("Collecting inputs to training.")
         training_states = np.array([x[0] for x in training_data])
         policy_targets = np.array([x[1][0] for x in training_data])
+        print(policy_targets)
         value_targets = np.array([x[1][1] for x in training_data])
         training_targets = {'value_head': value_targets, 'policy_head': policy_targets}
-        print("Starting model.fit")
+        print("Starting model.fit(...).")
         fit = network.cnn.model.fit(x=training_states, y=training_targets, epochs=config.epochs, verbose=1, validation_split=0, batch_size=config.batch_size)
         return network, fit.history
 
