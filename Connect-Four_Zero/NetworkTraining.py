@@ -108,7 +108,6 @@ class NetworkTraining(object):
             game.apply(max(policy, key=policy.get)) # gets key for max value
             to_play_index = 1 - to_play_index # switch network
         first_player_win = game.terminal_value(1)
-        print(f"first player win value: {first_player_win} with first player with index {first_player}")
         if first_player_win == 0: # tied game
             return -100
         if first_player == 0: # network went first
@@ -127,9 +126,9 @@ class NetworkTraining(object):
     def update_losses(history, losses: Losses, config: C4Config):
         if history is None:
             return
-        losses.add_loss(history['loss'][config.EPOCHS - 1],\
-                            history['value_head_loss'][config.EPOCHS - 1],\
-                            history['value_head_loss'][config.EPOCHS - 1])
+        losses.add_loss(history['loss'][config.epochs - 1],\
+                            history['value_head_loss'][config.epochs - 1],\
+                            history['value_head_loss'][config.epochs - 1])
         
 
     @staticmethod
