@@ -6,8 +6,8 @@ def softmax_cross_entropy_with_logits(y_true, y_pred):
     p = y_pred # probability distribution, -1 to 1?
     pi = y_true # probability distribution with values from 0 to 1
 
-    print(f"Should equal 1 {sum(pi)}")
-    print(f"Random {sum(p)}")
+    print(f"Should equal 1 {tf.reduce_sum(pi).numpy()}")
+    print(f"Random {tf.reduce_sum(p).numpy()}")
 
     pi = tf.cast(pi, dtype=tf.float32)
     p = tf.cast(p, dtype=tf.float32)
@@ -16,6 +16,8 @@ def softmax_cross_entropy_with_logits(y_true, y_pred):
     where = tf.equal(pi, zero)
     negatives = tf.fill(tf.shape(pi), -100.0) 
     p = tf.where(where, negatives, p)
+
+    print(p)
 
     loss = tf.nn.softmax_cross_entropy_with_logits(labels = pi, logits = p)
 
