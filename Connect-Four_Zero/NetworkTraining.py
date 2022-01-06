@@ -36,8 +36,6 @@ class NetworkTraining(object):
 
         network.cnn.write_weights(config.model_name)
 
-        # SelfPlay.run_selfplay_main(config, replay_buffer)
-
         processes = NetworkTraining.collect_game_data(config, replay_buffer)
         history = None
         losses = Losses()

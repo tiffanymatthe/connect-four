@@ -14,7 +14,6 @@ class Network(object):
         if model:
             self.cnn = Residual_CNN(config, model=model)
         elif model_name:
-            print("starting residual cnn")
             self.cnn = Residual_CNN(config, model_name=model_name)
         else:
             self.cnn = Residual_CNN(config)
@@ -30,7 +29,6 @@ class Network(object):
         """
         tensor = tf.convert_to_tensor(image[None], dtype=tf.int32)
         value, policy = self.cnn.model(tensor, training=False)
-        print("done prediction")
         return value[0, 0], policy[0]
 
     def get_weights(self):
