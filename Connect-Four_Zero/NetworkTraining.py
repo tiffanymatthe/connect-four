@@ -48,7 +48,7 @@ class NetworkTraining(object):
             replay_buffer.clear_buffer()
             print("Received training data and reset buffer.")
             processes = NetworkTraining.collect_game_data(config, replay_buffer)
-            new_network, new_history = NetworkTraining.train_network(network.clone_network(), training_data, config)
+            new_network, new_history = NetworkTraining.train_network(network.clone_network(config), training_data, config)
             if NetworkTraining.pit_networks(history, new_history, losses, config):
                 print(f"{BColors.OKBLUE}Replacing network with new model.{BColors.ENDC}")
                 network.cnn.model.set_weights(new_network.cnn.model.get_weights())
@@ -87,10 +87,12 @@ class NetworkTraining(object):
     @staticmethod
     def train_network(network: Network, training_data: list, config: C4Config):
         """training_data is a list with tuples (image, (policy, value))"""
+        print("Collecting inputs to training.")
         training_states = np.array([x[0] for x in training_data])
         policy_targets = np.array([x[1][0] for x in training_data])
         value_targets = np.array([x[1][1] for x in training_data])
         training_targets = {'value_head': value_targets, 'policy_head': policy_targets}
+        print("Starting model.fit")
         fit = network.cnn.model.fit(x=training_states, y=training_targets, epochs=config.epochs, verbose=1, validation_split=0, batch_size=config.batch_size)
         return network, fit.history
 
