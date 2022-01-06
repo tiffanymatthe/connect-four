@@ -53,6 +53,9 @@ class NetworkTraining(object):
                 print(f"{BColors.OKBLUE}Replacing network with new model.{BColors.ENDC}")
                 network.cnn.model.set_weights(new_network.cnn.model.get_weights())
                 network.cnn.write_weights(config.model_name)
+
+        for p in processes:
+                p.terminate()
         return network
 
     @staticmethod
@@ -90,9 +93,7 @@ class NetworkTraining(object):
         print("Collecting inputs to training.")
         training_states = np.array([x[0] for x in training_data])
         policy_targets = np.array([x[1][1] for x in training_data])
-        print(policy_targets)
         value_targets = np.array([x[1][0] for x in training_data])
-        print(value_targets)
         training_targets = {'value_head': value_targets, 'policy_head': policy_targets}
         print("Starting model.fit(...).")
         fit = network.cnn.model.fit(x=training_states, y=training_targets, epochs=config.epochs, verbose=1, validation_split=0, batch_size=config.batch_size)
