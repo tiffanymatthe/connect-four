@@ -117,7 +117,6 @@ class SelfPlay():
     @staticmethod
     def evaluate(node: C4Node, game: C4Game, network: Network):
         value, policy_logits = network.inference(game.make_image(-1))
-        print(policy_logits)
         # Expand the node.
         node.to_play = game.to_play()
         policy = {a: math.exp(policy_logits[a]) for a in game.legal_actions()}
