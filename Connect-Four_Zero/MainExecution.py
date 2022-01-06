@@ -71,7 +71,6 @@ def play_against_model(model):
 if __name__ == "__main__":
     version = '1'
     final_network = train_network(version)
-    final_network.cnn.write(version)
     # # model = tf.keras.models.load_model("models/model_3")
     # model = Network(C4Config()).cnn.model
     # play_against_model(model)
