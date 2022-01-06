@@ -7,8 +7,8 @@ class C4Config(object):
         self.num_actors = 3 # 5000
         self.num_sampling_moves = 10 # 30
         self.max_moves = 42 + 1  # 512 for chess and shogi, 722 for Go.
-        self.num_simulations = 25 # 800
-        self.num_games = 50 # per training step
+        self.num_simulations = 5 # 800
+        self.num_games = 2 # per training step
 
         # Root prior exploration noise.
         # for chess, 0.03 for Go and 0.15 for shogi.
@@ -23,7 +23,7 @@ class C4Config(object):
         self.epochs = 80
         self.batch_size = 32
 
-        self.iterations = int(30)
+        self.iterations = int(2)
         self.checkpoint_interval = int(2) # not currently in use
 
         self.weight_decay = 1e-4
@@ -49,7 +49,7 @@ class C4Config(object):
         ]
 
         # Validation
-        self.val_games = 10
+        self.val_games = 50
         self.win_factor = 1.3
 
         self.model_name = model_name if model_name else 'no_name'
