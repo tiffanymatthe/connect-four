@@ -45,6 +45,8 @@ class NetworkTraining(object):
         history = None
         losses = Losses()
 
+        clear = True
+
         for i in range(config.iterations):
             print(f'{BColors.HEADER}Iteration {i}/{config.iterations}{BColors.ENDC}')
             for p in processes:
@@ -52,7 +54,7 @@ class NetworkTraining(object):
             print("Self-play games took {} minutes".format((time.time() - game_start_time)/60))
 
             training_data = replay_buffer.get_batch()
-            replay_buffer.clear_buffer()
+            replay_buffer.clear_buffer() if clear else None
             print(f"Received {len(training_data)} samples of training data and reset buffer.")
 
             processes = NetworkTraining.collect_game_data(config, replay_buffer)
@@ -66,7 +68,9 @@ class NetworkTraining(object):
                 network.cnn.model.set_weights(new_network.cnn.model.get_weights())
                 network.cnn.write_weights(config.model_name)
                 NetworkTraining.update_losses(new_history, losses, config)
+                clear = True
             else:
+                clear = False
                 NetworkTraining.update_losses(history, losses, config) # unsure if this is good
 
         for p in processes:
@@ -79,19 +83,22 @@ class NetworkTraining(object):
         pitting_start_time = time.time()
         network_wins = 0
         new_network_wins = 0
+        tied_games = 0
         for i in range(config.val_games):
             print(f"Playing validation game {i}/{config.val_games}")
             winner = NetworkTraining.play_game_networks([network, new_network], config) # 0 if network, 1 if new_network
             if winner != -100:
                 network_wins += 1 - winner
                 new_network_wins += winner
-        print(f"Network wins: {network_wins} vs. new network wins: {new_network_wins}")
+            else:
+                tied_games += 1
+        print(f"Network wins: {network_wins} vs. new network wins: {new_network_wins}. Tied games: {tied_games}")
         print("Pitting networks took {} minutes".format((time.time() - pitting_start_time)/60))
         return new_network_wins * 1.0 > network_wins * config.win_factor
 
     @staticmethod
     def play_game_networks(networks: list, config: C4Config):
-        """Returns 0 if network wins, 1 if new network wins."""
+        """Returns 0 if network wins, 1 if new network wins. Returns -100 if it's a tied game."""
         game = C4Game()
         to_play_index = random.randint(0,1)
         first_player = to_play_index
@@ -101,9 +108,10 @@ class NetworkTraining(object):
             game.apply(max(policy, key=policy.get)) # gets key for max value
             to_play_index = 1 - to_play_index # switch network
         first_player_win = game.terminal_value(1)
+        print(f"first player win value: {first_player_win} with first player with index {first_player}")
         if first_player_win == 0: # tied game
             return -100
-        if first_player == 0:
+        if first_player == 0: # network went first
             if first_player_win == 1:
                 return 0 # network wins
             else:
