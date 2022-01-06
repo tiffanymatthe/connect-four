@@ -24,7 +24,6 @@ class SelfPlay():
     @staticmethod
     def run_selfplay(config: C4Config, replay_buffer: ReplayBuffer):
         tf.keras.backend.clear_session()
-        print("before initializing model")
         network = Network(config, model_name=config.model_name) # loads model from files
         id = multiprocessing.current_process()._identity[0]
         print("Starting self-play for process {}".format(id))

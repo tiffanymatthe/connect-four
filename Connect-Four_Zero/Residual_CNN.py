@@ -49,21 +49,13 @@ class Residual_CNN(Gen_Model):
         if model:
             self.model = model
         elif model_name:
-            print("before residual initialization in Residual_CNN")
             self.model = self._initialize_model()
-            print("initialized model")
             self.read_weights(model_name)
-            print("read weights")
         else:
             self.model = self._build_model(config)
 
     def residual_layer(self, input_block, filters, kernel_size):
-        print("in residual layer")
-        print(input_block)
-        print(filters)
-        print(kernel_size)
         x = self.conv_layer(input_block, filters, kernel_size)
-        print("finished conv")
 
         x = Conv2D(
             filters=filters, kernel_size=kernel_size, padding='same', 
@@ -77,11 +69,9 @@ class Residual_CNN(Gen_Model):
         return (x)
 
     def conv_layer(self, x, filters, kernel_size):
-        print("in conv_layer")
         x = Conv2D(
             filters=filters, kernel_size=kernel_size, padding='same', 
             use_bias=False, activation='linear')(x)
-        print("finished Conv2D")
         x = BatchNormalization(axis=-1)(x)
         x = LeakyReLU()(x)
 
@@ -132,20 +122,14 @@ class Residual_CNN(Gen_Model):
     def _initialize_model(self):
         """Not compiled. Only for inference (MCTS stuff)"""
         main_input = Input(shape=self.input_dim, name='main_input')
-        print("main")
 
         x = self.conv_layer(
             main_input, self.hidden_layers[0]['filters'], 
             self.hidden_layers[0]['kernel_size'])
 
-        print("created conv")
-
         if len(self.hidden_layers) > 1:
             for h in self.hidden_layers[1:]:
-                print(h)
                 x = self.residual_layer(x, h['filters'], h['kernel_size'])
-
-        print("created residual")
 
         vh = self.value_head(x)
         ph = self.policy_head(x)
