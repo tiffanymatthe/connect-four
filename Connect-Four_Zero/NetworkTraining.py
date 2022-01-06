@@ -61,7 +61,7 @@ class NetworkTraining(object):
             train_start_time = time.time()
             new_network, new_history = NetworkTraining.train_network(network.clone_network(config), training_data, config)
             print("Training network took {} minutes".format((time.time() - train_start_time)/60))
-            if NetworkTraining.pit_networks(history, new_history, config):
+            if NetworkTraining.pit_networks(network, new_network, config):
                 print(f"{BColors.OKBLUE}Replacing network with new model.{BColors.ENDC}")
                 network.cnn.model.set_weights(new_network.cnn.model.get_weights())
                 network.cnn.write_weights(config.model_name)
