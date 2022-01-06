@@ -68,7 +68,6 @@ class SelfPlay():
         SelfPlay.add_exploration_noise(config, root)
 
         for i in range(config.num_simulations):
-            print(i)
             node = root
             scratch_game = game.clone()
             search_path = [node]
