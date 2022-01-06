@@ -55,7 +55,7 @@ class NetworkTraining(object):
 
             training_data = replay_buffer.get_batch()
             replay_buffer.clear_buffer() if clear else None
-            print(f"Received {len(training_data)} samples of training data and reset buffer.")
+            print(f"Received {len(training_data)} samples of training data.")
 
             processes = NetworkTraining.collect_game_data(config, replay_buffer)
             game_start_time = time.time()
