@@ -34,7 +34,9 @@ class NetworkTraining(object):
         replay_buffer = NetworkTraining.get_buffer_from_base_manager()
         network = Network(config)
 
-        network.cnn.write(config.model_name)
+        network.cnn.write_weights(config.model_name)
+
+        # SelfPlay.run_selfplay_main(config, replay_buffer)
 
         processes = NetworkTraining.collect_game_data(config, replay_buffer)
         history = None
@@ -52,7 +54,7 @@ class NetworkTraining(object):
             if NetworkTraining.pit_networks(history, new_history, losses, config):
                 print(f"{BColors.OKBLUE}Replacing network with new model.{BColors.ENDC}")
                 network.cnn.model.set_weights(new_network.cnn.model.get_weights())
-                network.cnn.write(config.model_name)
+                network.cnn.write_weights(config.model_name)
         return network
 
     @staticmethod

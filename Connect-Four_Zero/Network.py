@@ -14,9 +14,10 @@ class Network(object):
         if model:
             self.cnn = Residual_CNN(config, model=model)
         elif model_name:
+            print("starting residual cnn")
             self.cnn = Residual_CNN(config, model_name=model_name)
         else:
-            self.cnn = Residual_CNN(config) 
+            self.cnn = Residual_CNN(config)
         self.width = 7
         self.height = 6
 
@@ -27,7 +28,6 @@ class Network(object):
         Returns a tuple with value and policy: (scalar, array of length 7)
         https://github.com/tensorflow/tensorflow/issues/40261#issuecomment-647191650
         """
-        print(self)
         tensor = tf.convert_to_tensor(image[None], dtype=tf.int32)
         value, policy = self.cnn.model(tensor, training=False)
         print("done prediction")
@@ -39,7 +39,7 @@ class Network(object):
         return self.cnn.model.trainable_weights
 
     def clone_network(self, config):
-        """Clones the network with same weights."""
+        """Clones the network with same weights. Good for training."""
         new = Network(config)
         new.cnn.model.set_weights(self.cnn.model.get_weights())
         return new

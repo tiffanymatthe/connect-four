@@ -23,6 +23,8 @@ class SelfPlay():
 
     @staticmethod
     def run_selfplay(config: C4Config, replay_buffer: ReplayBuffer):
+        tf.keras.backend.clear_session()
+        print("before initializing model")
         network = Network(config, model_name=config.model_name) # loads model from files
         id = multiprocessing.current_process()._identity[0]
         print("Starting self-play for process {}".format(id))
@@ -30,6 +32,16 @@ class SelfPlay():
             game = SelfPlay.play_game(config, network)
             replay_buffer.save_game(game)
             print("Game {}/{} finished by process {}".format(replay_buffer.get_buffer_size(), config.num_games, id))
+
+    @staticmethod
+    def run_selfplay_main(config: C4Config, replay_buffer: ReplayBuffer):
+        print("before initializing model")
+        network = Network(config, model_name=config.model_name) # loads model from files
+        print("Starting self-play for process")
+        while replay_buffer.get_buffer_size() < config.num_games:
+            game = SelfPlay.play_game(config, network)
+            replay_buffer.save_game(game)
+            print("Game {}/{} finished.".format(replay_buffer.get_buffer_size(), config.num_games))
 
     # Each game is produced by starting at the initial board position, then
     # repeatedly executing a Monte Carlo Tree Search to generate moves until the end
@@ -53,9 +65,7 @@ class SelfPlay():
     @staticmethod
     def run_mcts(config: C4Config, game: C4Game, network: Network):
         root = C4Node(0)
-        print("before evaluating")
         SelfPlay.evaluate(root, game, network)
-        print("after evaluating")
         SelfPlay.add_exploration_noise(config, root)
 
         for i in range(config.num_simulations):
@@ -110,7 +120,6 @@ class SelfPlay():
     @staticmethod
     def evaluate(node: C4Node, game: C4Game, network: Network):
         value, policy_logits = network.inference(game.make_image(-1))
-        print("finished inference")
         print(value)
         print(policy_logits)
         # Expand the node.
