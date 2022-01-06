@@ -22,5 +22,5 @@ class ReplayBuffer(object):
             for i in range(len(game.history)):
                 if i == 0:
                     continue
-                batch.append(game.make_image(i), game.make_target(i)) 
+                batch.append((game.make_image(i), game.make_target(i)))
         return batch
