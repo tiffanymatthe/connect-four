@@ -11,8 +11,12 @@ from Network import Network
 from ReplayBuffer import ReplayBuffer
 from C4Config import C4Config
 import numpy as np
+import math
+import random
 from Losses import Losses
+from C4Game import C4Game
 import time
+
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
@@ -37,6 +41,7 @@ class NetworkTraining(object):
         network.cnn.write_weights(config.model_name)
 
         processes = NetworkTraining.collect_game_data(config, replay_buffer)
+        game_start_time = time.time()
         history = None
         losses = Losses()
 
@@ -44,39 +49,80 @@ class NetworkTraining(object):
             print(f'{BColors.HEADER}Iteration {i}/{config.iterations}{BColors.ENDC}')
             for p in processes:
                 p.join()
+            print("Self-play games took {} minutes".format((time.time() - game_start_time))/60)
+
             training_data = replay_buffer.get_batch()
             replay_buffer.clear_buffer()
-            print("Received training data and reset buffer.")
+            print(f"Received {len(training_data)} samples of training data and reset buffer.")
+
             processes = NetworkTraining.collect_game_data(config, replay_buffer)
+            game_start_time = time.time()
+
+            train_start_time = time.time()
             new_network, new_history = NetworkTraining.train_network(network.clone_network(config), training_data, config)
+            print("Training network took {} minutes".format((time.time() - train_start_time))/60)
             if NetworkTraining.pit_networks(history, new_history, losses, config):
                 print(f"{BColors.OKBLUE}Replacing network with new model.{BColors.ENDC}")
                 network.cnn.model.set_weights(new_network.cnn.model.get_weights())
                 network.cnn.write_weights(config.model_name)
+                NetworkTraining.update_losses(new_history, losses, config)
+            else:
+                NetworkTraining.update_losses(history, losses, config) # unsure if this is good
 
         for p in processes:
                 p.terminate()
         return network
 
     @staticmethod
-    def pit_networks(history, new_history, losses: Losses, config: C4Config):
-        """Returns True if the new network is better. Also updates overall losses."""
+    def pit_networks(network: Network, new_network: Network, config: C4Config):
+        """Returns True if the new network is better."""
+        pitting_start_time = time.time()
+        network_wins = 0
+        new_network_wins = 0
+        for i in config.val_games:
+            print(f"Playing validation game {i}/{config.val_games}")
+            winner = NetworkTraining.play_game_networks([network, new_network], config) # 0 if network, 1 if new_network
+            if winner != -100:
+                network_wins += 1 - winner
+                new_network_wins += winner
+        print(f"Network wins: {network_wins} vs. new network wins: {new_network_wins}")
+        print("Pitting networks took {} minutes".format((time.time() - pitting_start_time))/60)
+        return new_network_wins * 1.0 > network_wins * config.win_factor
+
+    @staticmethod
+    def play_game_networks(networks: list, config: C4Config):
+        """Returns 0 if network wins, 1 if new network wins."""
+        game = C4Game()
+        to_play_index = random.randint(0,1)
+        first_player = to_play_index
+        while not game.terminal() and len(game.history) < config.max_moves:
+            # action, _ = SelfPlay.run_mcts(config, game, networks[to_play_index])
+            _, policy_logits = networks[to_play_index].inference(game.make_image(-1))
+            policy = {a: policy_logits[a] for a in game.legal_actions()} # I removed math.exp.
+            game.apply(max(policy, key=policy.get)) # gets key for max value
+            to_play_index = 1 - to_play_index # switch network
+        first_player_win = game.terminal_value(1)
+        if first_player_win == 0: # tied game
+            return -100
+        if first_player == 0:
+            if first_player_win == 1:
+                return 0 # network wins
+            else:
+                return 1 # new network wins
+        if first_player == 1:
+            if first_player_win == 1:
+                return 1 # new network wins
+            else:
+                return 0 # network inws
+        return -100
+
+    @staticmethod
+    def update_losses(history, losses: Losses, config: C4Config):
         if history is None:
-            return True
-        overall_loss = history['loss'][config.EPOCHS - 1]
-        new_overall_loss = new_history['loss'][config.EPOCHS - 1]
-        update_network = False
-        if new_overall_loss <= overall_loss:
-            update_network = True
-            losses.add_loss(new_history['loss'][config.EPOCHS - 1],\
-                            new_history['value_head_loss'][config.EPOCHS - 1],\
-                            new_history['value_head_loss'][config.EPOCHS - 1])
-        else:
-            losses.add_loss(history['loss'][config.EPOCHS - 1],\
+            return
+        losses.add_loss(history['loss'][config.EPOCHS - 1],\
                             history['value_head_loss'][config.EPOCHS - 1],\
                             history['value_head_loss'][config.EPOCHS - 1])
-        print(losses.losses)
-        return update_network
         
 
     @staticmethod
@@ -95,7 +141,7 @@ class NetworkTraining(object):
         policy_targets = np.array([x[1][1] for x in training_data])
         value_targets = np.array([x[1][0] for x in training_data])
         training_targets = {'value_head': value_targets, 'policy_head': policy_targets}
-        print("Starting model.fit(...).")
+        print(f"Starting model.fit(...) with batch size: {config.batch_size}.")
         fit = network.cnn.model.fit(x=training_states, y=training_targets, epochs=config.epochs, verbose=1, validation_split=0, batch_size=config.batch_size)
         return network, fit.history
 

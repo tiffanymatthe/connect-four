@@ -24,7 +24,7 @@ class C4Config(object):
         self.batch_size = 32
 
         self.iterations = int(30)
-        self.checkpoint_interval = int(2)
+        self.checkpoint_interval = int(2) # not currently in use
 
         self.weight_decay = 1e-4
         self.momentum = 0.9
@@ -47,5 +47,9 @@ class C4Config(object):
             , {'filters':75, 'kernel_size': (4,4)}
             , {'filters':75, 'kernel_size': (4,4)}
         ]
+
+        # Validation
+        self.val_games = 10
+        self.win_factor = 1.3
 
         self.model_name = model_name if model_name else 'no_name'
