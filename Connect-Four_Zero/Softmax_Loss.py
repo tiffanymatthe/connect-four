@@ -7,7 +7,7 @@ def softmax_cross_entropy_with_logits(y_true, y_pred):
     pi = y_true # probability distribution with values from 0 to 1
 
     print(f"y_true: {y_true}")
-    print(f"y_pred: {y_pred"")
+    print(f"y_pred: {y_pred}")
 
     pi = tf.cast(pi, dtype=tf.float32)
     p = tf.cast(p, dtype=tf.float32)
