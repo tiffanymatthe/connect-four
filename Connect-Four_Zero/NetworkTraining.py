@@ -79,7 +79,7 @@ class NetworkTraining(object):
         pitting_start_time = time.time()
         network_wins = 0
         new_network_wins = 0
-        for i in config.val_games:
+        for i in range(config.val_games):
             print(f"Playing validation game {i}/{config.val_games}")
             winner = NetworkTraining.play_game_networks([network, new_network], config) # 0 if network, 1 if new_network
             if winner != -100:
