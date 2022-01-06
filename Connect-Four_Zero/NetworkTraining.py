@@ -49,7 +49,7 @@ class NetworkTraining(object):
             print(f'{BColors.HEADER}Iteration {i}/{config.iterations}{BColors.ENDC}')
             for p in processes:
                 p.join()
-            print("Self-play games took {} minutes".format((time.time() - game_start_time))/60)
+            print("Self-play games took {} minutes".format((time.time() - game_start_time)/60))
 
             training_data = replay_buffer.get_batch()
             replay_buffer.clear_buffer()
@@ -60,7 +60,7 @@ class NetworkTraining(object):
 
             train_start_time = time.time()
             new_network, new_history = NetworkTraining.train_network(network.clone_network(config), training_data, config)
-            print("Training network took {} minutes".format((time.time() - train_start_time))/60)
+            print("Training network took {} minutes".format((time.time() - train_start_time)/60))
             if NetworkTraining.pit_networks(history, new_history, losses, config):
                 print(f"{BColors.OKBLUE}Replacing network with new model.{BColors.ENDC}")
                 network.cnn.model.set_weights(new_network.cnn.model.get_weights())
@@ -86,7 +86,7 @@ class NetworkTraining(object):
                 network_wins += 1 - winner
                 new_network_wins += winner
         print(f"Network wins: {network_wins} vs. new network wins: {new_network_wins}")
-        print("Pitting networks took {} minutes".format((time.time() - pitting_start_time))/60)
+        print("Pitting networks took {} minutes".format((time.time() - pitting_start_time)/60))
         return new_network_wins * 1.0 > network_wins * config.win_factor
 
     @staticmethod
