@@ -15,4 +15,8 @@ class C4Node(object):
     def value(self):
         if self.visit_count == 0:
             return 0
-        return self.value_sum / self.visit_count
+        try:
+            return self.value_sum * 1.0 / self.visit_count
+        except ZeroDivisionError:
+            print("caught ZERODIVISIONERROR")
+            return 0

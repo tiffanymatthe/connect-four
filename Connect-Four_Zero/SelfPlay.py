@@ -122,7 +122,8 @@ class SelfPlay():
         policy = {a: math.exp(policy_logits[a]) for a in game.legal_actions()}
         policy_sum = sum(policy.values())
         for action, p in policy.items():
-            node.children[action] = C4Node(p / policy_sum)
+            prior = p / policy_sum if policy_sum != 0 else 0
+            node.children[action] = C4Node(prior)
         return value
 
     # At the end of a simulation, we propagate the evaluation all the way up the
