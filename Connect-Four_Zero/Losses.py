@@ -15,16 +15,16 @@ class Losses(object):
         self.losses['policy_head_loss'].append(policy)
 
     def save(self, file: str):
-        """file: name of pickle file (not including extension) to save to. Stored under losses folder."""
-        with open(f"losses/{file}.pickle", "wb") as file_to_write:
+        """file: name of pickle file (not including extension or prefix) to save to. Stored under losses folder."""
+        with open(f"losses/loss_v{file}.pickle", "wb") as file_to_write:
             pickle.dump(self.losses, file_to_write)
             print("successful dump")
 
     def get_losses(self, file: str):
         """
-        file: name of pickle file (not including extension) to read from. Stored under losses folder.
+        file: name of pickle file (not including extension or prefix) to read from. Stored under losses folder.
         CAUTION: will overwrite any losses of current object.
         """
-        with open(f"losses/{file}.pickle", "rb") as file_to_read:
+        with open(f"losses/loss_v{file}.pickle", "rb") as file_to_read:
             self.losses = pickle.load(file_to_read)
             print("successful read")

@@ -13,13 +13,11 @@ from C4Game import C4Game
 from Node import Node
 import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
-import pstats
-import cProfile
 
 
-def train_network(model_name):
+def train_network(model_name, load=False):
     config = C4Config(model_name)
-    return NetworkTraining.alphazero(config)
+    return NetworkTraining.alphazero(config, load)
 
 
 def get_int_input(message):
@@ -70,7 +68,7 @@ def play_against_model(model):
 
 if __name__ == "__main__":
     version = '11'
-    final_network = train_network(version)
+    final_network = train_network(version, load=True)
     # # model = tf.keras.models.load_model("models/model_3")
     # model = Network(C4Config()).cnn.model
     # play_against_model(model)

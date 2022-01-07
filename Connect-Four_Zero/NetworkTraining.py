@@ -33,17 +33,22 @@ class NetworkTraining(object):
         return processes
 
     @staticmethod
-    def alphazero(config: C4Config):
+    def alphazero(config: C4Config, load: bool):
         tf.keras.backend.clear_session()
         replay_buffer = NetworkTraining.get_buffer_from_base_manager()
-        network = Network(config)
 
-        network.cnn.write_weights(config.model_name)
+        network = Network(config)
+        if load:
+            network.cnn.read_weights(config.model_name)
+        else:
+            network.cnn.write_weights(config.model_name)
 
         processes = NetworkTraining.collect_game_data(config, replay_buffer)
         game_start_time = time.time()
         history = None
         losses = Losses()
+        if load:
+            losses.get_losses(config.model_name)
 
         clear = True
 
@@ -74,6 +79,7 @@ class NetworkTraining(object):
             else:
                 clear = False
                 NetworkTraining.update_losses(history, losses, config) # unsure if this is good
+            losses.save(config.model_name)
 
         for p in processes:
                 p.terminate()
