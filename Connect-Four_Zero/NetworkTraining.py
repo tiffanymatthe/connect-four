@@ -23,11 +23,11 @@ tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 class NetworkTraining(object):
 
     @staticmethod
-    def collect_game_data(config, replay_buffer):
+    def collect_game_data(config, replay_buffer, random=False):
         processes = []
         for _ in range(config.num_actors):
             p = NetworkTraining.launch_job(
-                SelfPlay.run_selfplay, config, replay_buffer)
+                SelfPlay.run_selfplay, config, replay_buffer, random)
             processes.append(p)
 
         return processes
@@ -38,6 +38,7 @@ class NetworkTraining(object):
         replay_buffer = NetworkTraining.get_buffer_from_base_manager()
 
         network = Network(config)
+
         if load:
             network.cnn.read_weights(config.model_name)
         else:
@@ -54,6 +55,7 @@ class NetworkTraining(object):
                 print("Losses file not found.")
 
         clear = True
+        rand = True
 
         for i in range(config.iterations):
             print(f'{BColors.HEADER}Iteration {i}/{config.iterations}{BColors.ENDC}')
@@ -67,7 +69,7 @@ class NetworkTraining(object):
             print(f"Received {len(training_data)} samples of training data.")
 
             replay_buffer.reset_iteration()
-            processes = NetworkTraining.collect_game_data(config, replay_buffer)
+            processes = NetworkTraining.collect_game_data(config, replay_buffer, rand)
             game_start_time = time.time()
 
             train_start_time = time.time()
@@ -83,6 +85,7 @@ class NetworkTraining(object):
                 clear = False
                 NetworkTraining.update_losses(history, losses, config) # unsure if this is good
             losses.save(config.model_name)
+            rand = False
 
         for p in processes:
                 p.terminate()

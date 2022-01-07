@@ -11,6 +11,7 @@ from C4Game import C4Game
 from Network import Network
 from ReplayBuffer import ReplayBuffer
 from C4Config import C4Config
+import random
 
 
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -22,13 +23,13 @@ class SelfPlay():
     # writing it to a shared replay buffer.
 
     @staticmethod
-    def run_selfplay(config: C4Config, replay_buffer: ReplayBuffer):
+    def run_selfplay(config: C4Config, replay_buffer: ReplayBuffer, rand=False):
         tf.keras.backend.clear_session()
         network = Network(config, model_name=config.model_name) # loads model from files
         id = multiprocessing.current_process()._identity[0]
         print("Starting self-play for process {}".format(id))
         while replay_buffer.get_iteration_size() < config.num_games:
-            game = SelfPlay.play_game(config, network)
+            game = SelfPlay.play_game(config, network, rand=rand)
             replay_buffer.save_game(game)
             print("Game {}/{} finished by process {}".format(replay_buffer.get_iteration_size(), config.num_games, id))
 
@@ -37,11 +38,13 @@ class SelfPlay():
     # of the game is reached.
 
     @staticmethod
-    def play_game(config: C4Config, network: Network):
+    def play_game(config: C4Config, network: Network, rand=False, display=False):
         game = C4Game()
         while not game.terminal() and len(game.history) < config.max_moves:
-            action, root = SelfPlay.run_mcts(config, game, network)
+            action, root = SelfPlay.run_mcts(config, game, network, rand=rand)
             game.apply(action)
+            if display:
+                game.see_board()
             game.store_search_statistics(root)
         return game
 
@@ -51,9 +54,9 @@ class SelfPlay():
     # reach a leaf node.
 
     @staticmethod
-    def run_mcts(config: C4Config, game: C4Game, network: Network):
+    def run_mcts(config: C4Config, game: C4Game, network: Network, rand=False):
         root = C4Node(0)
-        SelfPlay.evaluate(root, game, network)
+        SelfPlay.evaluate(root, game, network, rand)
         SelfPlay.add_exploration_noise(config, root)
 
         for _ in range(config.num_simulations):
@@ -65,7 +68,7 @@ class SelfPlay():
                 action, node = SelfPlay.select_child(config, node)
                 scratch_game.apply(action)
                 search_path.append(node)
-            value = SelfPlay.evaluate(node, scratch_game, network)
+            value = SelfPlay.evaluate(node, scratch_game, network, rand)
             SelfPlay.backpropagate(
                 search_path, value, scratch_game.to_play())
         return SelfPlay.select_action(config, game, root), root
@@ -105,11 +108,22 @@ class SelfPlay():
     # We use the neural network to obtain a value and policy prediction.
 
     @staticmethod
-    def evaluate(node: C4Node, game: C4Game, network: Network):
-        value, policy_logits = network.inference(game.make_image(-1))
+    def evaluate(node: C4Node, game: C4Game, network: Network, rand=False):
+        value, policy_logits, policy = None, None, None
+        if not rand:
+            value, policy_logits = network.inference(game.make_image(-1))
+        else:
+            value = random.uniform(0, 1)
+
         # Expand the node.
         node.to_play = game.to_play()
-        policy = {a: math.exp(policy_logits[a]) for a in game.legal_actions()}
+
+        if not rand:
+            policy = {a: math.exp(policy_logits[a]) for a in game.legal_actions()}
+        else:
+            random_distribution = np.random.dirichlet(np.ones(7),size=1)[0]
+            policy = {a: random_distribution[a] for a in game.legal_actions()}
+
         policy_sum = sum(policy.values())
         for action, p in policy.items():
             prior = p / policy_sum if policy_sum != 0 else 0
