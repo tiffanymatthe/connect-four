@@ -54,9 +54,11 @@ class NetworkTraining(object):
             print("Self-play games took {} minutes".format((time.time() - game_start_time)/60))
 
             training_data = replay_buffer.get_batch()
-            replay_buffer.clear_buffer() if clear else None
+            if clear:
+                replay_buffer.clear_buffer()
             print(f"Received {len(training_data)} samples of training data.")
 
+            replay_buffer.iteration_size = 0
             processes = NetworkTraining.collect_game_data(config, replay_buffer)
             game_start_time = time.time()
 
@@ -85,7 +87,7 @@ class NetworkTraining(object):
         new_network_wins = 0
         tied_games = 0
         for i in range(config.val_games):
-            print(f"Playing validation game {i}/{config.val_games}")
+            # print(f"Playing validation game {i}/{config.val_games}")
             winner = NetworkTraining.play_game_networks([network, new_network], config) # 0 if network, 1 if new_network
             if winner != -100:
                 network_wins += 1 - winner

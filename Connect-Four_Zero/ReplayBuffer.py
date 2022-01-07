@@ -2,10 +2,12 @@
 
 class ReplayBuffer(object):
     def __init__(self) -> None:
-        self.buffer = []    
+        self.buffer = []
+        self.iteration_size = 0 
 
     def save_game(self, game):
         self.buffer.append(game)
+        self.iteration_size += 1
 
     def is_empty(self):
         return len(self.buffer) == 0
@@ -15,6 +17,8 @@ class ReplayBuffer(object):
     
     def clear_buffer(self):
         self.buffer = []
+        self.iteration_size = 0
+        print("Cleared buffer.")
 
     def get_batch(self):
         batch = []
