@@ -113,15 +113,18 @@ class NetworkTraining(object):
         game = C4Game()
         to_play_index = random.randint(0,1)
         first_player = to_play_index
+        display = random.randint(1,config.val_games) == 1
         while not game.terminal() and len(game.history) < config.max_moves:
             _, policy_logits = networks[to_play_index].inference(game.make_image(-1))
+            if display:
+                print(policy_logits)
             policy = {a: policy_logits[a] for a in game.legal_actions()} # I removed math.exp.
             game.apply(max(policy, key=policy.get)) # gets key for max value
             to_play_index = 1 - to_play_index # switch network
         first_player_win = game.terminal_value(1)
 
-        if random.randint(1,config.val_games) == 1:
-            print(first_player)
+        if display:
+            print(f"First player index:{first_player}")
             game.see_board()
 
         if first_player_win == 0: # tied game
