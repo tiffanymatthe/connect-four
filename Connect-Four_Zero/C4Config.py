@@ -4,11 +4,11 @@ class C4Config(object):
 
     def __init__(self, model_name=None):
         # Self-Play
-        self.num_actors = 2 # 5000
-        self.num_sampling_moves = 10 # 30
+        self.num_actors = 4 # 5000
+        self.num_sampling_moves = 12 # 30
         self.max_moves = 42 + 1  # 512 for chess and shogi, 722 for Go.
-        self.num_simulations = 30 # 800
-        self.num_games = 2 # per training step
+        self.num_simulations = 300 # 800
+        self.num_games = 20 # per training step
 
         # Root prior exploration noise.
         # for chess, 0.03 for Go and 0.15 for shogi.
@@ -23,7 +23,8 @@ class C4Config(object):
         self.epochs = 80
         self.batch_size = 32
 
-        self.iterations = int(2)
+        self.iterations = int(25)
+        self.random_iterations = int(2) # part of iterations count
         self.checkpoint_interval = int(2) # not currently in use
 
         self.weight_decay = 1e-4

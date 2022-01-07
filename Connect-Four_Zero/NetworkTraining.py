@@ -55,7 +55,6 @@ class NetworkTraining(object):
                 print("Losses file not found.")
 
         clear = True
-        rand = True
 
         for i in range(config.iterations):
             print(f'{BColors.HEADER}Iteration {i}/{config.iterations}{BColors.ENDC}')
@@ -69,6 +68,7 @@ class NetworkTraining(object):
             print(f"Received {len(training_data)} samples of training data.")
 
             replay_buffer.reset_iteration()
+            rand = i < config.random_iterations
             processes = NetworkTraining.collect_game_data(config, replay_buffer, rand)
             game_start_time = time.time()
 
@@ -85,7 +85,6 @@ class NetworkTraining(object):
                 clear = False
                 NetworkTraining.update_losses(history, losses, config) # unsure if this is good
             losses.save(config.model_name)
-            rand = False
 
         for p in processes:
                 p.terminate()
@@ -116,7 +115,8 @@ class NetworkTraining(object):
         game = C4Game()
         to_play_index = random.randint(0,1)
         first_player = to_play_index
-        display = random.randint(1,config.val_games) == 1
+        rand = random.randint(1,config.val_games)
+        display = rand == 1 or rand == 2
         while not game.terminal() and len(game.history) < config.max_moves:
             _, policy_logits = networks[to_play_index].inference(game.make_image(-1))
             policy = {a: policy_logits[a] for a in game.legal_actions()} # I removed math.exp.
