@@ -18,7 +18,7 @@ class Losses(object):
         """file: name of pickle file (not including extension or prefix) to save to. Stored under losses folder."""
         with open(f"losses/loss_v{file}.pickle", "wb") as file_to_write:
             pickle.dump(self.losses, file_to_write)
-            print("successful dump")
+            print("successful dump of losses")
 
     def get_losses(self, file: str):
         """
@@ -27,4 +27,4 @@ class Losses(object):
         """
         with open(f"losses/loss_v{file}.pickle", "rb") as file_to_read:
             self.losses = pickle.load(file_to_read)
-            print("successful read")
+            print("successful read of losses")

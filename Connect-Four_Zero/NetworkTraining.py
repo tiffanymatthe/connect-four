@@ -48,7 +48,10 @@ class NetworkTraining(object):
         history = None
         losses = Losses()
         if load:
-            losses.get_losses(config.model_name)
+            try:
+                losses.get_losses(config.model_name)
+            except FileNotFoundError:
+                print("Losses file not found.")
 
         clear = True
 
@@ -116,6 +119,11 @@ class NetworkTraining(object):
             game.apply(max(policy, key=policy.get)) # gets key for max value
             to_play_index = 1 - to_play_index # switch network
         first_player_win = game.terminal_value(1)
+
+        if random.randint(1,config.val_games) == 1:
+            print(first_player)
+            game.see_board()
+
         if first_player_win == 0: # tied game
             return -100
         if first_player == 0: # network went first
