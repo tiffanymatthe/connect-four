@@ -28,8 +28,7 @@ class SelfPlay():
         network = Network(config, model_name=config.model_name) # loads model from files
         id = multiprocessing.current_process()._identity[0]
         print("Starting self-play for process {}".format(id))
-        add_games = 100 if rand else 0
-        while replay_buffer.get_iteration_size() < config.num_games + add_games:
+        while replay_buffer.get_iteration_size() < config.num_games:
             game = SelfPlay.play_game(config, network, rand=rand)
             replay_buffer.save_game(game)
             print("Game {}/{} finished by process {}".format(replay_buffer.get_iteration_size(), config.num_games, id))
@@ -57,20 +56,22 @@ class SelfPlay():
     @staticmethod
     def run_mcts(config: C4Config, game: C4Game, network: Network, rand=False):
         root = C4Node(0)
-        SelfPlay.evaluate(root, game, network, rand)
+        SelfPlay.evaluate(root, game, network)
         SelfPlay.add_exploration_noise(config, root)
 
-        add_sim = 1000 if rand else 0
-        for _ in range(config.num_simulations + add_sim):
+        for i in range(config.num_simulations):
             node = root
             scratch_game = game.clone()
             search_path = [node]
 
             while node.expanded():
                 action, node = SelfPlay.select_child(config, node)
+                if i < 100 and rand:
+                    SelfPlay.add_exploration_noise(config, node)
                 scratch_game.apply(action)
                 search_path.append(node)
-            value = SelfPlay.evaluate(node, scratch_game, network, rand)
+            
+            value = SelfPlay.evaluate(node, scratch_game, network)
             SelfPlay.backpropagate(
                 search_path, value, scratch_game.to_play())
         return SelfPlay.select_action(config, game, root), root
@@ -90,6 +91,9 @@ class SelfPlay():
 
     @staticmethod
     def select_child(config: C4Config, node: C4Node):
+        ucbs = []
+        for action, child in node.children.items():
+            ucbs.append(SelfPlay.ucb_score(config, node, child))
         _, action, child = max((SelfPlay.ucb_score(config, node, child), action, child)
                                for action, child in node.children.items())
         return action, child
@@ -99,6 +103,8 @@ class SelfPlay():
 
     @staticmethod
     def ucb_score(config: C4Config, parent: C4Node, child: C4Node):
+        # if child.visit_count == 0:
+        #     return 100
         pb_c = math.log((parent.visit_count + config.pb_c_base + 1) /
                         config.pb_c_base) + config.pb_c_init
         pb_c *= math.sqrt(parent.visit_count) / (child.visit_count + 1)
@@ -110,21 +116,14 @@ class SelfPlay():
     # We use the neural network to obtain a value and policy prediction.
 
     @staticmethod
-    def evaluate(node: C4Node, game: C4Game, network: Network, rand=False):
+    def evaluate(node: C4Node, game: C4Game, network: Network):
         value, policy_logits, policy = None, None, None
-        if not rand:
-            value, policy_logits = network.inference(game.make_image(-1))
-        else:
-            value = random.uniform(0, 1)
+        value, policy_logits = network.inference(game.make_image(-1))
 
         # Expand the node.
         node.to_play = game.to_play()
 
-        if not rand:
-            policy = {a: math.exp(policy_logits[a]) for a in game.legal_actions()}
-        else:
-            random_distribution = np.random.dirichlet(np.ones(7),size=1)[0]
-            policy = {a: random_distribution[a] for a in game.legal_actions()}
+        policy = {a: math.exp(policy_logits[a]) for a in game.legal_actions()}
 
         policy_sum = sum(policy.values())
         for action, p in policy.items():
@@ -147,7 +146,7 @@ class SelfPlay():
     @staticmethod
     def add_exploration_noise(config: C4Config, node: C4Node):
         actions = node.children.keys()
-        noise = np.random.gamma(config.root_dirichlet_alpha, 1, len(actions))
+        noise = np.random.uniform(config.root_dirichlet_alpha, 1, len(actions))
         frac = config.root_exploration_fraction
         for a, n in zip(actions, noise):
             node.children[a].prior = node.children[a].prior * \
@@ -163,3 +162,15 @@ class SelfPlay():
         visit_count_probabilities = visit_counts / np.sum(visit_counts)
         idx = np.random.multinomial(1, visit_count_probabilities)
         return d[np.where(idx == 1)[0][0]]
+
+if __name__ == "__main__":
+    config = C4Config()
+    network = Network(config)
+
+    SelfPlay.play_game(config, network, display=True, rand=True)
+    SelfPlay.play_game(config, network, display=True, rand=True)
+    SelfPlay.play_game(config, network, display=True, rand=True)
+    SelfPlay.play_game(config, network, display=True, rand=True)
+    SelfPlay.play_game(config, network, display=True, rand=True)
+    SelfPlay.play_game(config, network, display=True, rand=True)
+    SelfPlay.play_game(config, network, display=True, rand=True)

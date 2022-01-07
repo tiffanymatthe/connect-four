@@ -4,27 +4,27 @@ class C4Config(object):
 
     def __init__(self, model_name=None):
         # Self-Play
-        self.num_actors = 4 # 5000
+        self.num_actors = 1 # 5000
         self.num_sampling_moves = 12 # 30
         self.max_moves = 42 + 1  # 512 for chess and shogi, 722 for Go.
-        self.num_simulations = 300 # 800
-        self.num_games = 20 # per training step
+        self.num_simulations = 20 # 800
+        self.num_games = 1 # per training step
 
         # Root prior exploration noise.
         # for chess, 0.03 for Go and 0.15 for shogi.
-        self.root_dirichlet_alpha = 0.3
-        self.root_exploration_fraction = 0.25
+        self.root_dirichlet_alpha = 0.4 # min noise up to 1
+        self.root_exploration_fraction = 0.2 # higher means more random noise
 
         # UCB formula
         self.pb_c_base = 19652
-        self.pb_c_init = 1.25
+        self.pb_c_init = 2.5
 
         # Training
-        self.epochs = 80
+        self.epochs = 30
         self.batch_size = 32
 
-        self.iterations = int(25)
-        self.random_iterations = int(25) # part of iterations count
+        self.iterations = int(2)
+        self.random_iterations = int(1) # part of iterations count
         self.checkpoint_interval = int(2) # not currently in use
 
         self.weight_decay = 1e-4

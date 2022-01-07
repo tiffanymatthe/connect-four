@@ -40,11 +40,6 @@ class C4Game(object):
         if (last_state == self.player1).sum() < self.win_num and (last_state == self.player2).sum() < self.win_num:
             return False
 
-        full_board = not (last_state == self.empty).any()
-        if full_board:
-            self.__winner = 0
-            return True
-
         arr_list = last_state.transpose().tolist()  # columns
         arr_list.extend(last_state.tolist())  # rows
         diagonal_indices = range(-2, 4)
@@ -59,8 +54,13 @@ class C4Game(object):
 
         if p1_win:
             self.__winner = self.player1
-        if p2_win:
+        elif p2_win:
             self.__winner = self.player2
+        else:
+            full_board = not (last_state == self.empty).any()
+            if full_board:
+                self.__winner = -1
+                return True
 
         return p1_win or p2_win
 
@@ -70,7 +70,7 @@ class C4Game(object):
             raise Exception("Game is not terminal.")
         if self.__winner == player_token:
             return 1
-        if self.__winner == 0:
+        if self.__winner == -1:
             return 0
         else:
             return -1
@@ -116,7 +116,6 @@ class C4Game(object):
         """
         This method returns the player id of which player's turn it is
         self.history is initialized with an empty board, so at index 0, should return 1 (player 1 token).
-        TODO: check
         """
         if state_index is not None:
             if state_index == -1:

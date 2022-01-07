@@ -75,6 +75,7 @@ class NetworkTraining(object):
             train_start_time = time.time()
             new_network, new_history = NetworkTraining.train_network(network.clone_network(config), training_data, config)
             print("Training network took {} minutes".format((time.time() - train_start_time)/60))
+            
             if NetworkTraining.pit_networks(network, new_network, config):
                 print(f"{BColors.OKBLUE}Replacing network with new model.{BColors.ENDC}")
                 network.cnn.model.set_weights(new_network.cnn.model.get_weights())
@@ -110,6 +111,14 @@ class NetworkTraining(object):
         return new_network_wins * 1.0 > network_wins * config.win_factor
 
     @staticmethod
+    def softmax_policy_sample(policy: dict):
+        """policy: dictionary of actions (keys) and associated logit"""
+        policy_sum = sum(policy.values())
+        probs = [val / policy_sum for val in policy.values()]
+        idx = np.where(np.random.multinomial(1, probs) == 1)[0][0]
+        return list(policy.keys())[idx]
+
+    @staticmethod
     def play_game_networks(networks: list, config: C4Config):
         """Returns 0 if network wins, 1 if new network wins. Returns -100 if it's a tied game."""
         game = C4Game()
@@ -119,8 +128,11 @@ class NetworkTraining(object):
         display = rand == 1 or rand == 2
         while not game.terminal() and len(game.history) < config.max_moves:
             _, policy_logits = networks[to_play_index].inference(game.make_image(-1))
-            policy = {a: policy_logits[a] for a in game.legal_actions()} # I removed math.exp.
-            game.apply(max(policy, key=policy.get)) # gets key for max value
+            policy = {a: math.exp(policy_logits[a]) for a in game.legal_actions()}
+            if len(game.history) < config.num_sampling_moves:
+                game.apply(NetworkTraining.softmax_policy_sample(policy))
+            else:
+                game.apply(max(policy, key=policy.get))
             to_play_index = 1 - to_play_index # switch network
         first_player_win = game.terminal_value(1)
 
@@ -176,3 +188,10 @@ class NetworkTraining(object):
         x = Process(target=f, args=args)
         x.start()
         return x
+
+# if __name__ == "__main__":
+#     config = C4Config()
+#     network = Network(config)
+#     network1 = Network(config)
+
+#     NetworkTraining.play_game_networks([network, network1], config)

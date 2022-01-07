@@ -5,11 +5,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
 import numpy as np
-from Network import Network
 from DataGenerator import DataGenerator
 from NetworkTraining import NetworkTraining
 from C4Config import C4Config
-from C4Game import C4Game
 from Node import Node
 import tensorflow as tf
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
