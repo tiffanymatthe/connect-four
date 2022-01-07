@@ -2,6 +2,7 @@
 from collections import defaultdict
 import math
 import Node
+from AlphaZero.DataGenerator import DataGenerator
 
 
 class MCTS:
@@ -30,6 +31,12 @@ class MCTS:
             # return self.Q[n] / self.N[n]  # average reward (max child)
 
         return max(self.children[node], key=score)
+
+    def get_policy(self, node):
+        policy = [0,0,0,0,0,0,0]
+        for child in self.children[node]:
+            avg_reward = self.Q[child] / self.N[child]
+        # todo, need to find associated action with each child
 
     def do_rollout(self, node):
         "Make the tree one layer better. (Train for one iteration.)"
@@ -138,17 +145,24 @@ def play_game(iterations):
     print("Winner is {}: {}".format(winner, board.colors[winner]))
 
 
-def self_play(iterations):
+def self_play(iterations, see=False):
     tree = MCTS()
     board = Node.Node()
-    board.see_board()
+    boards = []
+    targets = []
+    board.see_board() if see else None
+    player = 1
     while not board.is_terminal():
         for _ in range(iterations):
             tree.do_rollout(board)
+        policy = tree.get_policy(board)
         board = tree.choose(board)
-        board.see_board()
+        boards.append(DataGenerator.get_nn_input(board.current_state, player))
+        targets.append((0, policy))
+        board.see_board() if see else None
+        player = 1 - player
 
 
 if __name__ == "__main__":
-    play_game(200)
-    # self_play(200)
+    # play_game(200)
+    self_play(200)

@@ -66,7 +66,7 @@ class SelfPlay():
         SelfPlay.evaluate(root, game, network)
         SelfPlay.add_exploration_noise(config, root)
 
-        for i in range(config.num_simulations):
+        for _ in range(config.num_simulations):
             node = root
             scratch_game = game.clone()
             search_path = [node]
@@ -75,9 +75,10 @@ class SelfPlay():
                 action, node = SelfPlay.select_child(config, node)
                 scratch_game.apply(action)
                 search_path.append(node)
-                value = SelfPlay.evaluate(node, scratch_game, network)
-                SelfPlay.backpropagate(
-                    search_path, value, scratch_game.to_play())
+                
+            value = SelfPlay.evaluate(node, scratch_game, network)
+            SelfPlay.backpropagate(
+                search_path, value, scratch_game.to_play())
         return SelfPlay.select_action(config, game, root), root
 
     @staticmethod

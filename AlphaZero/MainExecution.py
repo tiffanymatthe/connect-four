@@ -69,7 +69,7 @@ def play_against_model(model):
 
 
 if __name__ == "__main__":
-    version = '11'
+    version = '12'
     final_network = train_network(version)
     # # model = tf.keras.models.load_model("models/model_3")
     # model = Network(C4Config()).cnn.model
