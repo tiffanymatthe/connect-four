@@ -24,7 +24,7 @@ class C4Config(object):
         self.batch_size = 32
 
         self.iterations = int(25)
-        self.random_iterations = int(2) # part of iterations count
+        self.random_iterations = int(25) # part of iterations count
         self.checkpoint_interval = int(2) # not currently in use
 
         self.weight_decay = 1e-4

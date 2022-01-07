@@ -28,7 +28,8 @@ class SelfPlay():
         network = Network(config, model_name=config.model_name) # loads model from files
         id = multiprocessing.current_process()._identity[0]
         print("Starting self-play for process {}".format(id))
-        while replay_buffer.get_iteration_size() < config.num_games:
+        add_games = 100 if rand else 0
+        while replay_buffer.get_iteration_size() < config.num_games + add_games:
             game = SelfPlay.play_game(config, network, rand=rand)
             replay_buffer.save_game(game)
             print("Game {}/{} finished by process {}".format(replay_buffer.get_iteration_size(), config.num_games, id))
@@ -59,7 +60,7 @@ class SelfPlay():
         SelfPlay.evaluate(root, game, network, rand)
         SelfPlay.add_exploration_noise(config, root)
 
-        add_sim = 300 if rand else 0
+        add_sim = 1000 if rand else 0
         for _ in range(config.num_simulations + add_sim):
             node = root
             scratch_game = game.clone()
