@@ -116,8 +116,6 @@ class NetworkTraining(object):
         display = random.randint(1,config.val_games) == 1
         while not game.terminal() and len(game.history) < config.max_moves:
             _, policy_logits = networks[to_play_index].inference(game.make_image(-1))
-            if display:
-                print(policy_logits)
             policy = {a: policy_logits[a] for a in game.legal_actions()} # I removed math.exp.
             game.apply(max(policy, key=policy.get)) # gets key for max value
             to_play_index = 1 - to_play_index # switch network
