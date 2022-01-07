@@ -12,6 +12,12 @@ class ReplayBuffer(object):
     def is_empty(self):
         return len(self.buffer) == 0
 
+    def get_iteration_size(self):
+        return self.iteration_size
+    
+    def reset_iteration(self):
+        self.iteration_size = 0
+
     def get_buffer_size(self):
         return len(self.buffer)
     

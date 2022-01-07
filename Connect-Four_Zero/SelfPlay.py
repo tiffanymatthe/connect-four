@@ -27,10 +27,10 @@ class SelfPlay():
         network = Network(config, model_name=config.model_name) # loads model from files
         id = multiprocessing.current_process()._identity[0]
         print("Starting self-play for process {}".format(id))
-        while replay_buffer.iteration_size < config.num_games:
+        while replay_buffer.get_iteration_size() < config.num_games:
             game = SelfPlay.play_game(config, network)
             replay_buffer.save_game(game)
-            print("Game {}/{} finished by process {}".format(replay_buffer.iteration_size, config.num_games, id))
+            print("Game {}/{} finished by process {}".format(replay_buffer.get_iteration_size(), config.num_games, id))
 
     # Each game is produced by starting at the initial board position, then
     # repeatedly executing a Monte Carlo Tree Search to generate moves until the end
