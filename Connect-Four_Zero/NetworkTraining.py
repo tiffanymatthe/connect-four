@@ -44,7 +44,7 @@ class NetworkTraining(object):
         else:
             network.cnn.write_weights(config.model_name)
 
-        processes = NetworkTraining.collect_game_data(config, replay_buffer)
+        processes = NetworkTraining.collect_game_data(config, replay_buffer, True)
         game_start_time = time.time()
         history = None
         losses = Losses()

@@ -59,7 +59,8 @@ class SelfPlay():
         SelfPlay.evaluate(root, game, network, rand)
         SelfPlay.add_exploration_noise(config, root)
 
-        for _ in range(config.num_simulations):
+        add_sim = 300 if rand else 0
+        for _ in range(config.num_simulations + add_sim):
             node = root
             scratch_game = game.clone()
             search_path = [node]
