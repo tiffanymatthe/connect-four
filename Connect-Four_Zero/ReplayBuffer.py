@@ -20,14 +20,11 @@ class ReplayBuffer(object):
 
     def get_buffer_size(self):
         return len(self.buffer)
-    
-    def clear_buffer(self):
-        self.buffer = []
-        self.iteration_size = 0
-        print("Cleared buffer.")
 
-    def get_batch(self):
+    def get_batch(self, clear):
         batch = []
+        if clear:
+            self.buffer = self.buffer[-self.iteration_size:-1]
         for game in self.buffer:
             for i in range(len(game.history)):
                 if i == 0:

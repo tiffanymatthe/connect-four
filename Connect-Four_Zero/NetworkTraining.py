@@ -62,9 +62,7 @@ class NetworkTraining(object):
                 p.join()
             print("Self-play games took {} minutes".format((time.time() - game_start_time)/60))
 
-            training_data = replay_buffer.get_batch()
-            if clear:
-                replay_buffer.clear_buffer()
+            training_data = replay_buffer.get_batch(clear)
             print(f"Received {len(training_data)} samples of training data.")
 
             replay_buffer.reset_iteration()
