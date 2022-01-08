@@ -10,6 +10,7 @@ from NetworkTraining import NetworkTraining
 from C4Config import C4Config
 from Node import Node
 import tensorflow as tf
+from Residual_CNN import Residual_CNN
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
@@ -52,7 +53,6 @@ def play_against_model(model):
         if (board.is_terminal()):
             break
         image = DataGenerator.get_nn_input(board.current_state, board.turn)
-        print(np.moveaxis(image, -1, 0))
         value, policy = model(image[None], training=False)
         print("value: {}, policies: {}".format(value, policy))
         board = board.move(np.argmax(policy))
@@ -66,9 +66,10 @@ def play_against_model(model):
 
 if __name__ == "__main__":
     version = '12'
-    final_network = train_network(version, load=False)
+    # final_network = train_network(version, load=False)
     # # model = tf.keras.models.load_model("models/model_3")
     # model = Network(C4Config()).cnn.model
-    # play_against_model(model)
+    model = Residual_CNN(C4Config(), version).model
+    play_against_model(model)
     # losses = Losses(f'losses_{version}')
     # losses.plot_losses()
