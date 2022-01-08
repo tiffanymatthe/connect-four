@@ -35,7 +35,7 @@ class NetworkTraining(object):
     @staticmethod
     def alphazero(config: C4Config, load: bool):
         tf.keras.backend.clear_session()
-        replay_buffer = NetworkTraining.get_buffer_from_base_manager()
+        replay_buffer = NetworkTraining.get_buffer_from_base_manager(config)
 
         network = Network(config)
 
@@ -157,11 +157,11 @@ class NetworkTraining(object):
         
 
     @staticmethod
-    def get_buffer_from_base_manager():
+    def get_buffer_from_base_manager(config: C4Config):
         BaseManager.register('ReplayBuffer', ReplayBuffer)
         manager = BaseManager()
         manager.start()
-        replay_buffer = manager.ReplayBuffer()
+        replay_buffer = manager.ReplayBuffer(config)
         return replay_buffer
 
     @staticmethod
