@@ -59,7 +59,7 @@ class NetworkTraining(object):
                 p.join()
             print("Self-play games took {} minutes".format((time.time() - game_start_time)/60))
 
-            training_data = replay_buffer.get_batch()
+            training_data = replay_buffer.sample_batch()
             print(f"Received {len(training_data)} samples of training data.")
 
             rand = i < config.random_iterations
