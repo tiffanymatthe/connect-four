@@ -10,7 +10,9 @@ from NetworkTraining import NetworkTraining
 from C4Config import C4Config
 from Node import Node
 import tensorflow as tf
-from Residual_CNN import Residual_CNN
+from Network import Network
+from SelfPlay import SelfPlay
+from C4Game import C4Game
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
@@ -44,7 +46,7 @@ def get_player_move(board):
     return board
 
 
-def play_against_model(model):
+def play_against_model(network: Network):
     board = Node()
     board.see_board()
     while True:
@@ -52,10 +54,10 @@ def play_against_model(model):
         board.see_board()
         if (board.is_terminal()):
             break
-        image = DataGenerator.get_nn_input(board.current_state, board.turn)
-        value, policy = model(image[None], training=False)
-        print("value: {}, policies: {}".format(value, policy))
-        board = board.move(np.argmax(policy))
+        game = C4Game()
+        game.initialize_history(board.current_state, board.turn)
+        action, root = SelfPlay.run_mcts(C4Config(), game, network)
+        board.move(action)
         board.see_board()
         if (board.is_terminal()):
             break
@@ -68,8 +70,7 @@ if __name__ == "__main__":
     version = '12'
     # final_network = train_network(version, load=False)
     # # model = tf.keras.models.load_model("models/model_3")
-    # model = Network(C4Config()).cnn.model
-    model = Residual_CNN(C4Config(), version).model
-    play_against_model(model)
+    network = Network(C4Config(), model_name=version)
+    play_against_model(network)
     # losses = Losses(f'losses_{version}')
     # losses.plot_losses()

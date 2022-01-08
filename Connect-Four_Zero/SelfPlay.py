@@ -62,10 +62,10 @@ class SelfPlay():
     def run_mcts(config: C4Config, game: C4Game, network: Network, rand=False):
         root = C4Node(0)
         SelfPlay.evaluate(root, game, network)
-        SelfPlay.add_exploration_noise(config, root)
 
         for i in range(config.num_simulations):
             node = root
+            SelfPlay.add_exploration_noise(config, root)
             scratch_game = game.clone()
             search_path = [node]
 
@@ -85,7 +85,6 @@ class SelfPlay():
     def select_action(config: C4Config, game: C4Game, root: C4Node):
         visit_counts = [(child.visit_count, action)
                         for action, child in root.children.items()]
-
         if len(game.history) < config.num_sampling_moves:
             _, action = SelfPlay.softmax_sample(visit_counts)
         else:
@@ -172,10 +171,8 @@ if __name__ == "__main__":
     config = C4Config()
     network = Network(config)
 
-    SelfPlay.play_game(config, network, display=True, rand=True)
-    SelfPlay.play_game(config, network, display=True, rand=True)
-    SelfPlay.play_game(config, network, display=True, rand=True)
-    SelfPlay.play_game(config, network, display=True, rand=True)
-    SelfPlay.play_game(config, network, display=True, rand=True)
-    SelfPlay.play_game(config, network, display=True, rand=True)
-    SelfPlay.play_game(config, network, display=True, rand=True)
+    game = SelfPlay.play_game(config, network, display=True)
+    for i in range(len(game.history)):
+        print(f"move i={i}")
+        print(game.make_image(i))
+        print(game.make_target(i))
