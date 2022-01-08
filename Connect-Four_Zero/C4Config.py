@@ -4,7 +4,7 @@ class C4Config(object):
 
     def __init__(self, model_name=None):
         # Self-Play
-        self.num_actors = 2 # 5000
+        self.num_actors = 4 # 5000
         self.num_sampling_moves = 6 # 30
         self.max_moves = 42 + 1  # 512 for chess and shogi, 722 for Go.
         self.num_simulations = 250 # 800
@@ -25,7 +25,7 @@ class C4Config(object):
         self.sample_size = 320
         self.window_size = 32
 
-        self.iterations = int(400)
+        self.iterations = int(500)
         self.random_iterations = int(0) # part of iterations count
 
         self.weight_decay = 1e-4
@@ -33,9 +33,9 @@ class C4Config(object):
         # Schedule for chess and shogi, Go starts at 2e-2 immediately.
         self.learning_rate_schedule = {
             0: 2e-1,
-            100: 2e-2,
-            250: 2e-3,
-            320: 2e-4
+            150: 2e-2,
+            300: 2e-3,
+            400: 2e-4
         }
 
         self.input_shape = (6,7,2)
