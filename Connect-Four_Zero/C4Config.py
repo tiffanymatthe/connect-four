@@ -5,10 +5,10 @@ class C4Config(object):
     def __init__(self, model_name=None):
         # Self-Play
         self.num_actors = 4 # 5000
-        self.num_sampling_moves = 6 # 30
+        self.num_sampling_moves = 10 # 30
         self.max_moves = 42 + 1  # 512 for chess and shogi, 722 for Go.
-        self.num_simulations = 250 # 800
-        self.num_games = 8 # per training step
+        self.num_simulations = 350 # 800
+        self.num_games = 12 # per training step
 
         # Root prior exploration noise.
         # for chess, 0.03 for Go and 0.15 for shogi.
@@ -20,10 +20,10 @@ class C4Config(object):
         self.pb_c_init = 2.5
 
         # Training
-        self.epochs = 4
+        self.epochs = 10
         self.batch_size = 32
-        self.sample_size = 320
-        self.window_size = 32
+        self.sample_size = 480
+        self.window_size = 48
 
         self.iterations = int(500)
         self.random_iterations = int(0) # part of iterations count
@@ -33,9 +33,9 @@ class C4Config(object):
         # Schedule for chess and shogi, Go starts at 2e-2 immediately.
         self.learning_rate_schedule = {
             0: 2e-1,
-            150: 2e-2,
-            300: 2e-3,
-            400: 2e-4
+            50: 2e-2,
+            150: 2e-3,
+            250: 2e-4
         }
 
         self.input_shape = (6,7,2)

@@ -50,7 +50,6 @@ class SelfPlay():
             game.apply(action)
             if display:
                 game.see_board()
-                print(action)
             game.store_search_statistics(root)
         return game
 
@@ -86,7 +85,6 @@ class SelfPlay():
     def select_action(config: C4Config, game: C4Game, root: C4Node):
         visit_counts = [(child.visit_count, action)
                         for action, child in root.children.items()]
-        print(visit_counts)
         if len(game.history) < config.num_sampling_moves:
             _, action = SelfPlay.softmax_sample(visit_counts)
         else:
@@ -173,10 +171,8 @@ if __name__ == "__main__":
     config = C4Config()
     network = Network(config)
 
-    SelfPlay.play_game(config, network, display=True, rand=True)
-    SelfPlay.play_game(config, network, display=True, rand=True)
-    SelfPlay.play_game(config, network, display=True, rand=True)
-    SelfPlay.play_game(config, network, display=True, rand=True)
-    SelfPlay.play_game(config, network, display=True, rand=True)
-    SelfPlay.play_game(config, network, display=True, rand=True)
-    SelfPlay.play_game(config, network, display=True, rand=True)
+    game = SelfPlay.play_game(config, network, display=True)
+    for i in range(len(game.history)):
+        print(f"move i={i}")
+        print(game.make_image(i))
+        print(game.make_target(i))
