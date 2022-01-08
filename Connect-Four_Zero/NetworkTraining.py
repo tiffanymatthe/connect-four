@@ -34,6 +34,7 @@ class NetworkTraining(object):
 
     @staticmethod
     def alphazero(config: C4Config, load: bool):
+        start_time = time.time()
         tf.keras.backend.clear_session()
         replay_buffer = NetworkTraining.get_buffer_from_base_manager(config)
 
@@ -68,25 +69,21 @@ class NetworkTraining(object):
             game_start_time = time.time()
 
             if i in config.learning_rate_schedule.keys():
-                network.cnn.set_learning_rate(config.learning_rate_schedule[i])
+                lr = config.learning_rate_schedule[i]
+                print(f"Updated learning rate to {lr}")
+                network.cnn.set_learning_rate(lr)
 
             train_start_time = time.time()
             _, new_history = NetworkTraining.train_network(network, training_data, config) # no cloning! should update automatically
             print("Training network took {} minutes".format((time.time() - train_start_time)/60))
             NetworkTraining.update_losses(new_history, losses, config)
             network.cnn.write_weights(config.model_name)
-
-            # if NetworkTraining.pit_networks(network, new_network, config):
-            #     print(f"{BColors.OKBLUE}Replacing network with new model.{BColors.ENDC}")
-            #     network.cnn.model.set_weights(new_network.cnn.model.get_weights())
-            #     network.cnn.write_weights(config.model_name)
-            #     NetworkTraining.update_losses(new_history, losses, config)
-            # else:
-            #     NetworkTraining.update_losses(history, losses, config) # unsure if this is good
             losses.save(config.model_name)
 
         for p in processes:
                 p.terminate()
+
+        print("Total time is {} minutes".format((time.time() - start_time)/60))
         return network
 
     @staticmethod

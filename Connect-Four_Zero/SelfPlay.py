@@ -50,6 +50,7 @@ class SelfPlay():
             game.apply(action)
             if display:
                 game.see_board()
+                print(action)
             game.store_search_statistics(root)
         return game
 
@@ -62,10 +63,10 @@ class SelfPlay():
     def run_mcts(config: C4Config, game: C4Game, network: Network, rand=False):
         root = C4Node(0)
         SelfPlay.evaluate(root, game, network)
-        SelfPlay.add_exploration_noise(config, root)
 
         for i in range(config.num_simulations):
             node = root
+            SelfPlay.add_exploration_noise(config, root)
             scratch_game = game.clone()
             search_path = [node]
 
@@ -85,7 +86,7 @@ class SelfPlay():
     def select_action(config: C4Config, game: C4Game, root: C4Node):
         visit_counts = [(child.visit_count, action)
                         for action, child in root.children.items()]
-
+        print(visit_counts)
         if len(game.history) < config.num_sampling_moves:
             _, action = SelfPlay.softmax_sample(visit_counts)
         else:
