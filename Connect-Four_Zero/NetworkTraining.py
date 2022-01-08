@@ -46,7 +46,6 @@ class NetworkTraining(object):
 
         processes = NetworkTraining.collect_game_data(config, replay_buffer, True)
         game_start_time = time.time()
-        history = None
         losses = Losses()
         if load:
             try:
@@ -54,35 +53,31 @@ class NetworkTraining(object):
             except FileNotFoundError:
                 print("Losses file not found.")
 
-        clear = True
-
         for i in range(config.iterations):
             print(f'{BColors.HEADER}Iteration {i}/{config.iterations}{BColors.ENDC}')
             for p in processes:
                 p.join()
             print("Self-play games took {} minutes".format((time.time() - game_start_time)/60))
 
-            training_data = replay_buffer.get_batch(clear)
+            training_data = replay_buffer.get_batch()
             print(f"Received {len(training_data)} samples of training data.")
 
-            replay_buffer.reset_iteration()
             rand = i < config.random_iterations
             processes = NetworkTraining.collect_game_data(config, replay_buffer, rand)
             game_start_time = time.time()
 
             train_start_time = time.time()
-            new_network, new_history = NetworkTraining.train_network(network.clone_network(config), training_data, config)
+            _, new_history = NetworkTraining.train_network(network, training_data, config) # no cloning! should update automatically
             print("Training network took {} minutes".format((time.time() - train_start_time)/60))
-            
-            if NetworkTraining.pit_networks(network, new_network, config):
-                print(f"{BColors.OKBLUE}Replacing network with new model.{BColors.ENDC}")
-                network.cnn.model.set_weights(new_network.cnn.model.get_weights())
-                network.cnn.write_weights(config.model_name)
-                NetworkTraining.update_losses(new_history, losses, config)
-                clear = True
-            else:
-                clear = False
-                NetworkTraining.update_losses(history, losses, config) # unsure if this is good
+            NetworkTraining.update_losses(new_history, losses, config)
+
+            # if NetworkTraining.pit_networks(network, new_network, config):
+            #     print(f"{BColors.OKBLUE}Replacing network with new model.{BColors.ENDC}")
+            #     network.cnn.model.set_weights(new_network.cnn.model.get_weights())
+            #     network.cnn.write_weights(config.model_name)
+            #     NetworkTraining.update_losses(new_history, losses, config)
+            # else:
+            #     NetworkTraining.update_losses(history, losses, config) # unsure if this is good
             losses.save(config.model_name)
 
         for p in processes:

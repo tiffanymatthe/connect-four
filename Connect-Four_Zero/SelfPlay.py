@@ -30,6 +30,8 @@ class SelfPlay():
         print("Starting self-play for process {}".format(id))
         while replay_buffer.get_iteration_size() < config.num_games:
             game = SelfPlay.play_game(config, network, rand=rand)
+            if random.randint(1,4) == 1:
+                game.see_board()
             replay_buffer.save_game(game)
             print("Game {}/{} finished by process {}".format(replay_buffer.get_iteration_size(), config.num_games, id))
 
