@@ -5,7 +5,7 @@ from C4Config import C4Config
 class ReplayBuffer(object):
     def __init__(self, config: C4Config) -> None:
         self.buffer = []
-        self.buffer_size = config.sample_size
+        self.sample_size = config.sample_size
         self.window_size = config.window_size
 
     def save_game(self, game):
