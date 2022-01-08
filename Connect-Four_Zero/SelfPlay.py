@@ -35,6 +35,7 @@ class SelfPlay():
             if random.randint(1,4) == 1:
                 game.see_board()
             replay_buffer.save_game(game)
+            game_num += 1
             print("Game {}/{} finished by process {}".format(game_num, games_to_play, id))
 
     # Each game is produced by starting at the initial board position, then
