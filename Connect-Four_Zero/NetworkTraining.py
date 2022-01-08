@@ -38,6 +38,7 @@ class NetworkTraining(object):
         replay_buffer = NetworkTraining.get_buffer_from_base_manager(config)
 
         network = Network(config)
+        network.cnn.set_learning_rate(config.learning_rate_schedule[0])
 
         if load:
             network.cnn.read_weights(config.model_name)
@@ -66,10 +67,14 @@ class NetworkTraining(object):
             processes = NetworkTraining.collect_game_data(config, replay_buffer, rand)
             game_start_time = time.time()
 
+            if i in config.learning_rate_schedule.keys():
+                network.cnn.set_learning_rate(config.learning_rate_schedule[i])
+
             train_start_time = time.time()
             _, new_history = NetworkTraining.train_network(network, training_data, config) # no cloning! should update automatically
             print("Training network took {} minutes".format((time.time() - train_start_time)/60))
             NetworkTraining.update_losses(new_history, losses, config)
+            network.cnn.write_weights(config.model_name)
 
             # if NetworkTraining.pit_networks(network, new_network, config):
             #     print(f"{BColors.OKBLUE}Replacing network with new model.{BColors.ENDC}")

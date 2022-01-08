@@ -45,6 +45,7 @@ class Residual_CNN(Gen_Model):
         self.hidden_layers = config.hidden_layers
         self.reg_const = config.weight_decay
         self.num_layers = len(self.hidden_layers)
+        self.learning_rate = 0.01
         self.model = None
         if model:
             self.model = model
@@ -53,6 +54,11 @@ class Residual_CNN(Gen_Model):
             self.read_weights(model_name)
         else:
             self.model = self._build_model(config)
+
+    def set_learning_rate(self, lr: float):
+        from keras import backend as K
+        self.learning_rate = lr
+        K.set_value(self.model.optimizer.learning_rate, lr)
 
     def residual_layer(self, input_block, filters, kernel_size):
         x = self.conv_layer(input_block, filters, kernel_size)
@@ -113,12 +119,6 @@ class Residual_CNN(Gen_Model):
 
         return (x)
 
-    def get_learning_rate_fn(self, config: C4Config):
-        boundaries = list(config.learning_rate_schedule.keys())
-        boundaries.pop(0)
-        return tf.keras.optimizers.schedules.PiecewiseConstantDecay(
-            boundaries, config.learning_rate_schedule.values())
-
     def _initialize_model(self):
         """Not compiled. Only for inference (MCTS stuff)"""
         main_input = Input(shape=self.input_dim, name='main_input')
@@ -143,7 +143,7 @@ class Residual_CNN(Gen_Model):
             "value_head": "mse", 
             "policy_head": softmax_cross_entropy_with_logits
         }
-        opt = SGD(learning_rate = self.get_learning_rate_fn(config), 
+        opt = SGD(learning_rate = self.learning_rate, 
                 momentum = config.momentum)
         model.compile(loss = losses,
                     optimizer = opt,

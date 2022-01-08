@@ -20,23 +20,22 @@ class C4Config(object):
         self.pb_c_init = 2.5
 
         # Training
-        self.epochs = 2
+        self.epochs = 3
         self.batch_size = 32
         self.sample_size = 256
         self.window_size = 16
 
-        self.iterations = int(2e3)
+        self.iterations = int(6e3)
         self.random_iterations = int(0) # part of iterations count
-        self.checkpoint_interval = int(100) # not currently in use
 
         self.weight_decay = 1e-4
         self.momentum = 0.9
         # Schedule for chess and shogi, Go starts at 2e-2 immediately.
         self.learning_rate_schedule = {
             0: 2e-1,
-            20: 2e-2,
-            30: 2e-3,
-            35: 2e-4
+            1000: 2e-2,
+            3000: 2e-3,
+            5000: 2e-4
         }
 
         self.input_shape = (6,7,2)
