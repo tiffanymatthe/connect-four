@@ -25,7 +25,7 @@ class C4Config(object):
         self.sample_size = 320
         self.window_size = 32
 
-        self.iterations = int(6e3)
+        self.iterations = int(400)
         self.random_iterations = int(0) # part of iterations count
 
         self.weight_decay = 1e-4
@@ -33,9 +33,9 @@ class C4Config(object):
         # Schedule for chess and shogi, Go starts at 2e-2 immediately.
         self.learning_rate_schedule = {
             0: 2e-1,
-            1000: 2e-2,
-            3000: 2e-3,
-            5000: 2e-4
+            100: 2e-2,
+            250: 2e-3,
+            320: 2e-4
         }
 
         self.input_shape = (6,7,2)
