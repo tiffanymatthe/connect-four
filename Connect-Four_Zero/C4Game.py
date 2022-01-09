@@ -123,6 +123,15 @@ class C4Game(object):
             return (state_index + 1) % 2
         return len(self.history) % 2
 
+    def initialize_history(self, state, to_play):
+        """Only use in beginning."""
+        self.history = []
+        if to_play != 1:
+            state = 1 - state # invert 1 and 0
+            state = np.where(state == 2, -1, state) # change 2 to -1
+        self.history.append(state)
+        
+
     def __find_longest_seq(self, arr, val) -> int:
         """
         Parameters
