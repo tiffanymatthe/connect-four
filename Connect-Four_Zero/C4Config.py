@@ -26,7 +26,7 @@ class C4Config(object):
         self.window_size = 48
 
         self.iterations = int(500)
-        self.random_iterations = int(0) # part of iterations count
+        self.random_iterations = int(100) # part of iterations count
 
         self.weight_decay = 1e-4
         self.momentum = 0.9

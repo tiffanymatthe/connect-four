@@ -68,9 +68,9 @@ def play_against_model(network: Network):
 
 if __name__ == "__main__":
     version = '32'
-    # final_network = train_network(version, load=False)
+    final_network = train_network(version, load=False)
     # # model = tf.keras.models.load_model("models/model_3")
-    network = Network(C4Config(), model_name=version)
-    play_against_model(network)
+    # network = Network(C4Config(), model_name=version)
+    # play_against_model(network)
     # losses = Losses(f'losses_{version}')
     # losses.plot_losses()
