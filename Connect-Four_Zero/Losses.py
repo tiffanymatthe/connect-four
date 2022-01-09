@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import pickle
+import matplotlib.pyplot as plt
 
 class Losses(object):
     def __init__(self) -> None:
@@ -28,3 +29,13 @@ class Losses(object):
         with open(f"losses/loss_v{file}.pickle", "rb") as file_to_read:
             self.losses = pickle.load(file_to_read)
             print("successful read of losses")
+
+    def plot_losses(self):
+        plt.plot(self.losses['loss'], 'r')
+        plt.plot(self.losses['value_head_loss'] ,'b')
+        plt.plot(self.losses['policy_head_loss'] ,'g')
+        plt.xlabel("Iterations")
+        plt.ylabel("Loss")
+        plt.title("Training losses")
+        plt.legend(['loss', 'value head loss', 'policy head loss'])
+        plt.savefig("losses.png")

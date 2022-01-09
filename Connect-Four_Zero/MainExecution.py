@@ -14,6 +14,7 @@ import tensorflow as tf
 from Network import Network
 from SelfPlay import SelfPlay
 from C4Game import C4Game
+from Losses import Losses
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 
 
@@ -98,7 +99,8 @@ if __name__ == "__main__":
     version = '12'
     # final_network = train_network(version, load=False)
     # # model = tf.keras.models.load_model("models/model_3")
-    network = Network(C4Config())
-    play_against_model(network)
-    # losses = Losses(f'losses_{version}')
-    # losses.plot_losses()
+    # network = Network(C4Config())
+    # play_against_model(network)
+    losses = Losses()
+    losses.get_losses(version)
+    losses.plot_losses()
