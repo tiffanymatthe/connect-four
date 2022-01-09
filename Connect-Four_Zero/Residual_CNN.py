@@ -31,7 +31,6 @@ class Gen_Model():
         print(f'{BColors.OKGREEN}Saved weights.{BColors.ENDC}')
 
     def read_weights(self, version):
-        print("reading weights")
         self.model.load_weights('weights/version' + "{0:0>4}".format(version) + '.h5')
         print(f'{BColors.OKGREEN}Retrieved weights.{BColors.ENDC}')
 

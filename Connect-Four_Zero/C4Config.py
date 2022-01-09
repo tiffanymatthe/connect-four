@@ -27,6 +27,7 @@ class C4Config(object):
 
         self.iterations = int(500)
         self.random_iterations = int(200) # part of iterations count
+        self.checkpoint_interval = int(50)
 
         self.weight_decay = 1e-4
         self.momentum = 0.9
