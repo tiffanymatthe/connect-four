@@ -7,7 +7,7 @@ class C4Config(object):
         self.num_actors = 4 # 5000
         self.num_sampling_moves = 10 # 30
         self.max_moves = 42 + 1  # 512 for chess and shogi, 722 for Go.
-        self.num_simulations = 350 # 800
+        self.num_simulations = 500 # 800
         self.num_games = 12 # per training step
 
         # Root prior exploration noise.

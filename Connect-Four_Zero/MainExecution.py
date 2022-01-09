@@ -5,6 +5,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(os.path.abspath(os.path.join(dir_path, os.pardir)))
 import numpy as np
+from MCTS import MCTS
 from DataGenerator import DataGenerator
 from NetworkTraining import NetworkTraining
 from C4Config import C4Config
@@ -54,10 +55,37 @@ def play_against_model(network: Network):
         board.see_board()
         if (board.is_terminal()):
             break
+        image = DataGenerator.get_nn_input(board.current_state, board.turn, True)
+        value, policy = network.inference(image)
+        print(value)
+        print(policy)
+        board = board.move(np.argmax(policy))
+        # game = C4Game()
+        # game.initialize_history(board.current_state, board.turn)
+        # action, root = SelfPlay.run_mcts(C4Config(), game, network)
+        # board = board.move(action)
+        board.see_board()
+        if (board.is_terminal()):
+            break
+
+    winner = board.get_winner()
+    print("Winner is {}: {}".format(winner, board.colors[winner]))
+
+def mcts_against_model(network: Network):
+    board = Node()
+    board.see_board()
+    tree = MCTS()
+    while True:
+        for _ in range(C4Config().num_simulations):
+            tree.do_rollout(board)
+        board = tree.choose(board)
+        board.see_board()
+        if (board.is_terminal()):
+            break
         game = C4Game()
         game.initialize_history(board.current_state, board.turn)
         action, root = SelfPlay.run_mcts(C4Config(), game, network)
-        board.move(action)
+        board = board.move(action)
         board.see_board()
         if (board.is_terminal()):
             break
@@ -70,7 +98,7 @@ if __name__ == "__main__":
     version = '12'
     # final_network = train_network(version, load=False)
     # # model = tf.keras.models.load_model("models/model_3")
-    network = Network(C4Config(), model_name=version)
+    network = Network(C4Config())
     play_against_model(network)
     # losses = Losses(f'losses_{version}')
     # losses.plot_losses()
