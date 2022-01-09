@@ -147,6 +147,6 @@ class Residual_CNN(Gen_Model):
                 momentum = config.momentum)
         model.compile(loss = losses,
                     optimizer = opt,
-                    loss_weights = {'value_head': 0.5, 'policy_head': 0.5}) #not sure where these values come from tho?
+                    loss_weights = {'value_head': 0.5, 'policy_head': 0.5})
 
         return model

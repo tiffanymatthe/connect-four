@@ -65,13 +65,14 @@ class SelfPlay():
 
         for i in range(config.num_simulations):
             node = root
-            SelfPlay.add_exploration_noise(config, root)
+            if i < 60:
+                SelfPlay.add_exploration_noise(config, root)
             scratch_game = game.clone()
             search_path = [node]
 
             while node.expanded():
                 action, node = SelfPlay.select_child(config, node)
-                if i < 100 and rand:
+                if i < 30 and rand:
                     SelfPlay.add_exploration_noise(config, node)
                 scratch_game.apply(action)
                 search_path.append(node)
@@ -171,8 +172,7 @@ if __name__ == "__main__":
     config = C4Config()
     network = Network(config)
 
-    game = SelfPlay.play_game(config, network, display=True)
+    game = SelfPlay.play_game(config, network, rand=False, display=True)
     for i in range(len(game.history)):
         print(f"move i={i}")
-        print(game.make_image(i))
         print(game.make_target(i))
