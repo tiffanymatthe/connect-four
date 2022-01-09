@@ -74,14 +74,12 @@ class NetworkTraining(object):
                 network.cnn.set_learning_rate(lr)
 
             train_start_time = time.time()
-            print(network.get_weights())
             _, new_history = NetworkTraining.train_network(network, training_data, config)
-            print(network.get_weights())
             print("Training network took {} minutes".format((time.time() - train_start_time)/60))
             NetworkTraining.update_losses(new_history, losses, config)
             network.cnn.write_weights(config.model_name)
             if i % config.checkpoint_interval == 0:
-                print(f'{BColors.UNDERLINE}Saving weights at checkpoint interval.{BColors.ENDC}')
+                print(f'{BColors.WARNING}Saving weights at checkpoint interval.{BColors.ENDC}')
                 network.cnn.write_weights(f"{config.model_name}_iteration_{i}")
                 losses.plot_losses()
             losses.save(config.model_name)
