@@ -155,7 +155,7 @@ class NetworkTraining(object):
             return
         losses.add_loss(history['loss'][config.epochs - 1],\
                             history['value_head_loss'][config.epochs - 1],\
-                            history['value_head_loss'][config.epochs - 1])
+                            history['policy_head_loss'][config.epochs - 1])
         
 
     @staticmethod
