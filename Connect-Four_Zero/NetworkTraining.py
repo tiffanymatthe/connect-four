@@ -83,6 +83,7 @@ class NetworkTraining(object):
             if i % config.checkpoint_interval == 0:
                 print(f'{BColors.UNDERLINE}Saving weights at checkpoint interval.{BColors.ENDC}')
                 network.cnn.write_weights(f"{config.model_name}_iteration_{i}")
+                losses.plot_losses()
             losses.save(config.model_name)
 
         for p in processes:
