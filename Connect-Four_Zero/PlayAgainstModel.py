@@ -42,7 +42,14 @@ def play_against_model(network: Network):
         if (board.is_terminal()):
             break
         value, policy = network.inference(DataGenerator.get_nn_input(board.current_state, board.turn))
-        board.move(np.argmax(policy))
+        print(value)
+        possible_moves = []
+        for i in range(len(policy)):
+            if board.is_col_full(i):
+                possible_moves.append(0)
+            else:
+                possible_moves.append(policy[i])
+        board = board.move(np.argmax(policy))
         board.see_board()
         if (board.is_terminal()):
             break
@@ -53,4 +60,4 @@ def play_against_model(network: Network):
 if __name__ == "__main__":
     version = '33'
     network = Network(C4Config(), model_name=version)
-    play_against_model()
+    play_against_model(network)

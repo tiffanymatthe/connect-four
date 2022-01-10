@@ -22,8 +22,8 @@ class C4Config(object):
         # Training
         self.epochs = 20
         self.batch_size = 32
-        self.sample_size = 480
-        self.window_size = 48
+        self.sample_size = 600
+        self.window_size = 60
 
         self.iterations = int(2000)
         self.random_iterations = int(100) # part of iterations count
